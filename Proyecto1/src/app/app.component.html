@@ -45,17 +45,6 @@
       [(ngModel)]="salida"
     ></textarea>
   </div>
-  <!-- Modal simple para mostrar el mensaje de éxito -->
-  <div
-    id="successModal"
-    class="modal-overlay"
-    [ngClass]="{ show: isModalVisible }"
-  >
-    <div class="modal-content" [ngClass]="{ 'fade-out': isModalClosing }">
-      <span class="close" (click)="closeModal()">&times;</span>
-      <p>{{ mensaje }}</p>
-    </div>
-  </div>
 </div>
 
 <div *ngIf="showLogin">
@@ -63,4 +52,15 @@
   <button class="btn btn-secondary btn-lg mt-3" (click)="volver()">
     Volver
   </button>
+</div>
+
+<div
+  class="modal-overlay"
+  *ngIf="isModalVisible"
+  [ngClass]="{ 'fade-out': isModalClosing }"
+>
+  <div class="modal-content">
+    <span class="close" (click)="closeModal()">&times;</span>
+    <p>{{ mensaje }}</p>
+  </div>
 </div>
