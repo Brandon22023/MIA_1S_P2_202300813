@@ -2,13 +2,15 @@ import { Component, ViewChild, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AnalyzerService } from './analyzer.service';
 import { CommonModule } from '@angular/common'; // Importar CommonModule
+import { Router, RouterModule } from '@angular/router'; // Importar Router para la navegación
+import { LoginComponent } from './login/login.component'; // Importar LoginComponent
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterModule, LoginComponent], // Agregar LoginComponent aquí
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
-  standalone: true
+  standalone: true,
 })
 export class AppComponent {
   isModalVisible: boolean = false; // Estado del modal
@@ -17,8 +19,17 @@ export class AppComponent {
   entrada: string = '';
   salida: string = '';
   mensaje: string = ''; // esto sera para mostrar el exito de lo metico
+  showLogin: boolean = false; // Controla si se muestra el LoginComponent
 
-  constructor(private analyzerService: AnalyzerService) {}
+  constructor(
+    private router: Router,
+    private analyzerService: AnalyzerService
+  ) {}
+
+  irALogin(): void {
+    this.showLogin = true; // Cambia a la vista del login
+    window.history.pushState({}, '', '/login'); // Actualiza manualmente la URL a /login
+  }
 
   @ViewChild('fileInput') fileInput!: ElementRef;
 
@@ -49,12 +60,12 @@ export class AppComponent {
       next: (response) => {
         // Imprime la respuesta en la consola
         console.log('Respuesta del servidor:', response);
-  
+
         // Asegúrate de que la respuesta tenga la estructura esperada
         if (response && response.output) {
           this.salida = response.output;
           console.log('Salida procesada:', this.salida);
-  
+
           // Verificar si la salida comienza con "Error"
           if (this.salida.trim().toLowerCase().startsWith('error')) {
             // Mostrar el mensaje de error en el modal
@@ -75,7 +86,7 @@ export class AppComponent {
       error: (error) => {
         // Manejo de errores
         console.error('Error del servidor:', error);
-  
+
         if (error.error && error.error.error) {
           this.salida = `Error: ${error.error.error}`;
         } else if (error.message) {
@@ -83,11 +94,11 @@ export class AppComponent {
         } else {
           this.salida = 'Error desconocido';
         }
-  
+
         // Mostrar el mensaje de error en el modal
         this.mensaje = this.salida;
         this.showModal();
-      }
+      },
     });
   }
 
@@ -114,4 +125,8 @@ export class AppComponent {
     this.playClickSound(); // Reproducir sonido al cerrar el modal
   }
 
+  volver(): void {
+    this.showLogin = false; // Cambia a la vista principal
+    window.history.pushState({}, '', '/'); // Actualiza manualmente la URL a la raíz
+  }
 }

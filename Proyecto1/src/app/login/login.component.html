@@ -1,0 +1,50 @@
+<div class="container d-flex justify-content-center align-items-center vh-100">
+  <div class="card shadow-lg p-4">
+    <h2 class="text-center mb-4">Bienvenido</h2>
+    <form>
+      <div class="mb-3">
+        <label for="partitionId" class="form-label">ID Partición</label>
+        <input
+          type="text"
+          class="form-control"
+          id="partitionId"
+          placeholder="Ingrese el ID de la partición"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="username" class="form-label">Usuario</label>
+        <input
+          type="text"
+          class="form-control"
+          id="username"
+          placeholder="Ingrese su usuario"
+        />
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <input
+          type="password"
+          class="form-control"
+          id="password"
+          placeholder="Ingrese su contraseña"
+        />
+      </div>
+      <div class="form-check mb-3">
+        <input type="checkbox" class="form-check-input" id="rememberMe" />
+        <label class="form-check-label" for="rememberMe"
+          >Recordar usuario</label
+        >
+      </div>
+      <button type="submit" class="btn btn-primary w-100 mb-3">
+        Iniciar Sesión
+      </button>
+      <button
+        type="button"
+        class="btn btn-outline-light w-100"
+        (click)="volver()"
+      >
+        Volver
+      </button>
+    </form>
+  </div>
+</div>

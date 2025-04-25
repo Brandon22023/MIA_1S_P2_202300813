@@ -1,57 +1,146 @@
 @keyframes color-change-blue {
-  0% { background-color: rgba(0, 123, 255, 0.6); }
-  7% { background-color: rgba(0, 105, 217, 0.6); }
-  14% { background-color: rgba(0, 87, 179, 0.6); }
-  21% { background-color: rgba(0, 69, 141, 0.6); }
-  28% { background-color: rgba(0, 51, 103, 0.6); }
-  35% { background-color: rgba(0, 33, 65, 0.6); }
-  42% { background-color: rgba(0, 15, 27, 0.6); }
-  49% { background-color: rgba(0, 69, 141, 0.6); }
-  56% { background-color: rgba(0, 87, 179, 0.6); }
-  63% { background-color: rgba(0, 105, 217, 0.6); }
-  70% { background-color: rgba(0, 123, 255, 0.6); }
-  77% { background-color: rgba(0, 110, 230, 0.6); }
-  84% { background-color: rgba(0, 95, 200, 0.6); }
-  91% { background-color: rgba(0, 80, 170, 0.6); }
-  100% { background-color: rgba(0, 70, 150, 0.6); }
+  0% {
+    background-color: rgba(0, 123, 255, 0.6);
+  }
+  7% {
+    background-color: rgba(0, 105, 217, 0.6);
+  }
+  14% {
+    background-color: rgba(0, 87, 179, 0.6);
+  }
+  21% {
+    background-color: rgba(0, 69, 141, 0.6);
+  }
+  28% {
+    background-color: rgba(0, 51, 103, 0.6);
+  }
+  35% {
+    background-color: rgba(0, 33, 65, 0.6);
+  }
+  42% {
+    background-color: rgba(0, 15, 27, 0.6);
+  }
+  49% {
+    background-color: rgba(0, 69, 141, 0.6);
+  }
+  56% {
+    background-color: rgba(0, 87, 179, 0.6);
+  }
+  63% {
+    background-color: rgba(0, 105, 217, 0.6);
+  }
+  70% {
+    background-color: rgba(0, 123, 255, 0.6);
+  }
+  77% {
+    background-color: rgba(0, 110, 230, 0.6);
+  }
+  84% {
+    background-color: rgba(0, 95, 200, 0.6);
+  }
+  91% {
+    background-color: rgba(0, 80, 170, 0.6);
+  }
+  100% {
+    background-color: rgba(0, 70, 150, 0.6);
+  }
 }
 
 @keyframes color-change-green {
-  0% { background-color: rgba(40, 167, 69, 0.6); }
-  7% { background-color: rgba(34, 142, 59, 0.6); }
-  14% { background-color: rgba(28, 117, 49, 0.6); }
-  21% { background-color: rgba(22, 92, 39, 0.6); }
-  28% { background-color: rgba(16, 67, 29, 0.6); }
-  35% { background-color: rgba(10, 42, 19, 0.6); }
-  42% { background-color: rgba(4, 17, 9, 0.6); }
-  49% { background-color: rgba(22, 92, 39, 0.6); }
-  56% { background-color: rgba(28, 117, 49, 0.6); }
-  63% { background-color: rgba(34, 142, 59, 0.6); }
-  70% { background-color: rgba(40, 167, 69, 0.6); }
-  77% { background-color: rgba(35, 150, 62, 0.6); }
-  84% { background-color: rgba(30, 130, 54, 0.6); }
-  91% { background-color: rgba(25, 110, 47, 0.6); }
-  100% { background-color: rgba(20, 95, 40, 0.6); }
+  0% {
+    background-color: rgba(40, 167, 69, 0.6);
+  }
+  7% {
+    background-color: rgba(34, 142, 59, 0.6);
+  }
+  14% {
+    background-color: rgba(28, 117, 49, 0.6);
+  }
+  21% {
+    background-color: rgba(22, 92, 39, 0.6);
+  }
+  28% {
+    background-color: rgba(16, 67, 29, 0.6);
+  }
+  35% {
+    background-color: rgba(10, 42, 19, 0.6);
+  }
+  42% {
+    background-color: rgba(4, 17, 9, 0.6);
+  }
+  49% {
+    background-color: rgba(22, 92, 39, 0.6);
+  }
+  56% {
+    background-color: rgba(28, 117, 49, 0.6);
+  }
+  63% {
+    background-color: rgba(34, 142, 59, 0.6);
+  }
+  70% {
+    background-color: rgba(40, 167, 69, 0.6);
+  }
+  77% {
+    background-color: rgba(35, 150, 62, 0.6);
+  }
+  84% {
+    background-color: rgba(30, 130, 54, 0.6);
+  }
+  91% {
+    background-color: rgba(25, 110, 47, 0.6);
+  }
+  100% {
+    background-color: rgba(20, 95, 40, 0.6);
+  }
 }
 
 @keyframes color-change-red {
-  0% { background-color: rgba(220, 53, 69, 0.6); }
-  7% { background-color: rgba(187, 45, 59, 0.6); }
-  14% { background-color: rgba(154, 37, 49, 0.6); }
-  21% { background-color: rgba(121, 29, 39, 0.6); }
-  28% { background-color: rgba(88, 21, 29, 0.6); }
-  35% { background-color: rgba(55, 13, 19, 0.6); }
-  42% { background-color: rgba(22, 5, 9, 0.6); }
-  49% { background-color: rgba(121, 29, 39, 0.6); }
-  56% { background-color: rgba(154, 37, 49, 0.6); }
-  63% { background-color: rgba(187, 45, 59, 0.6); }
-  70% { background-color: rgba(220, 53, 69, 0.6); }
-  77% { background-color: rgba(200, 50, 65, 0.6); }
-  84% { background-color: rgba(170, 45, 58, 0.6); }
-  91% { background-color: rgba(140, 40, 52, 0.6); }
-  100% { background-color: rgba(120, 35, 48, 0.6); }
+  0% {
+    background-color: rgba(220, 53, 69, 0.6);
+  }
+  7% {
+    background-color: rgba(187, 45, 59, 0.6);
+  }
+  14% {
+    background-color: rgba(154, 37, 49, 0.6);
+  }
+  21% {
+    background-color: rgba(121, 29, 39, 0.6);
+  }
+  28% {
+    background-color: rgba(88, 21, 29, 0.6);
+  }
+  35% {
+    background-color: rgba(55, 13, 19, 0.6);
+  }
+  42% {
+    background-color: rgba(22, 5, 9, 0.6);
+  }
+  49% {
+    background-color: rgba(121, 29, 39, 0.6);
+  }
+  56% {
+    background-color: rgba(154, 37, 49, 0.6);
+  }
+  63% {
+    background-color: rgba(187, 45, 59, 0.6);
+  }
+  70% {
+    background-color: rgba(220, 53, 69, 0.6);
+  }
+  77% {
+    background-color: rgba(200, 50, 65, 0.6);
+  }
+  84% {
+    background-color: rgba(170, 45, 58, 0.6);
+  }
+  91% {
+    background-color: rgba(140, 40, 52, 0.6);
+  }
+  100% {
+    background-color: rgba(120, 35, 48, 0.6);
+  }
 }
-
 
 .btn-elegir-archivo {
   animation: color-change-blue 4s infinite;
@@ -72,119 +161,29 @@
 }
 
 .textarea-container {
-    display: flex;
-    position: relative;
-  }
-  
-  .line-numbers {
-    color: white;
-    background-color: black;
-    padding: 10px;
-    text-align: right;
-    user-select: none;
-    white-space: pre;
-  }
-  
-  textarea {
-    flex: 1;
-    margin-left: 10px;
-    resize: none;
-  }
-
-  .entrada-textarea, .salida-textarea {
-    background-color: rgba(70, 79, 99, 0.8);
-    color: white;
-  }
-
-
-
-
-
-
-  
-/* Animación de entrada del modal */
-@keyframes slideDown {
-  from {
-    transform: translateY(-50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Animación de salida del modal */
-@keyframes slideUp {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-}
-
-/* Fondo oscuro y borroso para el modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro */
-  backdrop-filter: blur(4px); /* Efecto borroso */
-  -webkit-backdrop-filter: blur(4px); /* Compatibilidad con navegadores basados en WebKit */
-  display: none; /* Oculto por defecto */
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  opacity: 0; /* Oculto por defecto */
-  transition: opacity 0.3s ease; /* Animación de apertura y cierre */
-}
-
-/* Mostrar el modal cuando se activa */
-.modal-overlay.show {
   display: flex;
-  opacity: 1;
-}
-
-/* Estilo del contenido del modal */
-.modal-content {
-  background-color: rgba(70, 79, 99, 0.8); /* Fondo similar al textarea */
-  color: white; /* Texto blanco */
-  border-radius: 12px;
-  padding: 25px;
-  width: 50%;
-  max-width: 500px;
-  text-align: center;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada */
-  animation: slideDown 0.3s ease; /* Animación de entrada */
   position: relative;
-  font-family: 'Times New Roman', Times, serif; /* Fuente consistente */
 }
 
-/* Aplicar animación de salida */
-.modal-content.fade-out {
-  animation: slideUp 0.3s ease; /* Animación de salida */
+.line-numbers {
+  color: white;
+  background-color: black;
+  padding: 10px;
+  text-align: right;
+  user-select: none;
+  white-space: pre;
 }
 
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
+textarea {
+  flex: 1;
+  margin-left: 10px;
+  resize: none;
 }
 
-.close:hover,
-.close:focus {
-  color: black;
-  text-decoration: none;
-  cursor: pointer;
-}
-.mb-3 {
-  color: #aaa;
+.entrada-textarea,
+.salida-textarea {
+  background-color: rgba(70, 79, 99, 0.8);
+  color: white;
 }
 
-
+/* Elimina estilos relacionados con el control de vistas */

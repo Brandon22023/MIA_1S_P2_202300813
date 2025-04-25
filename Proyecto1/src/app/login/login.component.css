@@ -1,0 +1,85 @@
+body {
+  background: linear-gradient(135deg, #6a11cb, #2575fc); /* Fondo degradado */
+  font-family: "Poppins", sans-serif;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.1); /* Fondo semitransparente */
+  backdrop-filter: blur(20px); /* Efecto de desenfoque */
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada */
+  padding: 30px;
+  width: 400px;
+}
+
+.card h2 {
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.form-label {
+  color: #ffffff; /* Hacer las etiquetas visibles */
+  font-size: 16px; /* Aumentar el tamaño del texto */
+  font-weight: 500;
+}
+
+.form-control {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5); /* Borde semitransparente */
+  background: rgba(255, 255, 255, 0.2); /* Fondo semitransparente */
+  color: #ffffff;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.7); /* Placeholder semitransparente */
+}
+
+.form-control:focus {
+  box-shadow: 0 0 10px rgba(106, 17, 203, 0.8); /* Efecto de foco */
+  border-color: #6a11cb;
+}
+
+.btn-primary {
+  background-color: #6a11cb;
+  border: none;
+  border-radius: 10px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: #4e0e9e;
+  transform: scale(1.05); /* Efecto de zoom */
+}
+
+.btn-secondary {
+  background-color: #acb6e5;
+  border: none;
+  border-radius: 10px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  color: #ffffff;
+}
+
+.btn-secondary:hover {
+  background-color: #8fa4d4;
+  transform: scale(1.05); /* Efecto de zoom */
+}
+
+.btn-outline-light {
+  border: 2px solid #ffffff;
+  border-radius: 10px;
+  color: #ffffff;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-outline-light:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05); /* Efecto de zoom */
+}
+
+.form-check-label {
+  font-size: 14px;
+  color: #ffffff;
+}
