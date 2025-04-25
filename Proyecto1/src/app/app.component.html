@@ -1,5 +1,6 @@
+<!-- Vista principal -->
 <div
-  *ngIf="!showLogin"
+  *ngIf="!showLogin && !showvisualizador"
   class="container mt-3"
   style="font-family: 'Times New Roman', Times, serif"
 >
@@ -25,6 +26,9 @@
     <button class="btn btn-elegir-archivo btn-lg" (click)="irALogin()">
       Ir a Login
     </button>
+    <button class="btn btn-elegir-archivo btn-lg" (click)="irVisualizador()">
+      Ir a Visualizador
+    </button>
   </div>
 
   <div class="mb-3">
@@ -47,12 +51,17 @@
   </div>
 </div>
 
+<!-- Vista de login -->
 <div *ngIf="showLogin">
-  <app-login (volverEvent)="volver()"></app-login>
-  <button class="btn btn-secondary btn-lg mt-3" (click)="volver()">
-    Volver
-  </button>
+  <app-login (irVisualizadorEvent)="irVisualizador()" (volverEvent)="volver()"></app-login>
 </div>
+
+<!-- Vista del visualizador -->
+<div *ngIf="showvisualizador">
+  <app-visualizador (volverEvent)="volverDesdeVisualizador()"></app-visualizador>
+</div>
+
+<!-- Modal -->
 
 <div
   class="modal-overlay"

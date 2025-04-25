@@ -4,10 +4,11 @@ import { AnalyzerService } from './analyzer.service';
 import { CommonModule } from '@angular/common'; // Importar CommonModule
 import { Router, RouterModule } from '@angular/router'; // Importar Router para la navegación
 import { LoginComponent } from './login/login.component'; // Importar LoginComponent
+import { VisualizadorComponent } from './visualizador/visualizador.component';
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, CommonModule, RouterModule, LoginComponent], // Agregar LoginComponent aquí
+  imports: [FormsModule, CommonModule, RouterModule, LoginComponent, VisualizadorComponent], // Agregar LoginComponent aquí
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
   standalone: true,
@@ -20,6 +21,7 @@ export class AppComponent {
   salida: string = '';
   mensaje: string = ''; // esto sera para mostrar el exito de lo metico
   showLogin: boolean = false; // Controla si se muestra el LoginComponent
+  showvisualizador: boolean = false; // Controla si se muestra el visualizador
 
   constructor(
     private router: Router,
@@ -129,4 +131,16 @@ export class AppComponent {
     this.showLogin = false; // Cambia a la vista principal
     window.history.pushState({}, '', '/'); // Actualiza manualmente la URL a la raíz
   }
+  //del visualizador
+
+  irVisualizador(): void {
+  this.showvisualizador = true; // Cambia a la vista del visualizador
+  this.showLogin = false; // Asegúrate de ocultar el login
+  window.history.pushState({}, '', '/visualizador'); // Actualiza manualmente la URL
+}
+
+volverDesdeVisualizador(): void {
+  this.showvisualizador = false; // Regresa a la vista principal
+  window.history.pushState({}, '', '/'); // Actualiza manualmente la URL a la raíz
+ }
 }

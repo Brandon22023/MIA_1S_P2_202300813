@@ -33,11 +33,12 @@ func main() {
 		// Imprime el comando recibido
 		fmt.Println("Comando recibido:", req.Command)
 
-		commands := strings.Split(req.Command, "\n")
+		commandsList := strings.Split(req.Command, "\n")
 		output := ""
+		var paths []string // Lista para almacenar los paths de mkdir
         // Imprime el comando recibido
     	fmt.Println("Comando recibido:", req.Command)
-		for _, cmd := range commands {
+		for _, cmd := range commandsList {
 			if strings.TrimSpace(cmd) == "" {
 				continue
 			}
@@ -47,11 +48,41 @@ func main() {
 				output += fmt.Sprintf("Error: %s\n", err.Error())
 			} else {
 				output += fmt.Sprintf("%s\n", result)
+
+
+				// Si el comando es mkdir, captura el path
+				if strings.HasPrefix(strings.ToLower(cmd), "mkdisk") {
+					result, err := commands.ParseMkdisk(strings.Fields(cmd))
+					if err == nil {
+						// Extraer el path del mensaje devuelto
+						lines := strings.Split(result, "\n") // Dividir el mensaje en líneas
+						for _, line := range lines {
+							if strings.HasPrefix(line, "-> Path:") {
+								path := strings.TrimSpace(strings.TrimPrefix(line, "-> Path:"))
+								paths = append(paths, path) // Agregar el path a la lista
+								break
+							}
+						}
+					}
+				}
 			}
 		}
 
 		if output == "" {
 			output = "No se ejecutó ningún comando"
+		}
+		
+		fmt.Println("aqui empezara la salida")
+        fmt.Println("---------------------------------")
+
+        // Proceso final: Exportar información de cada path
+        for _, diskPath := range paths {
+			err := commands.ExportDiskInfo(diskPath)
+			if err != nil {
+				output += fmt.Sprintf("\nError al exportar información del disco en %s: %s", diskPath, err.Error())
+			} else {
+				output += fmt.Sprintf("\nInformación del disco exportada exitosamente para el disco en %s", diskPath)
+			}
 		}
 
 		return c.JSON(CommandResponse{
@@ -87,6 +118,7 @@ func main() {
 				"error": err.Error(),
 			})
 		}
+		
 	
 		// Respuesta exitosa
 		return c.JSON(fiber.Map{
