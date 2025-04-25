@@ -5,10 +5,13 @@
       <div class="mb-3">
         <label for="partitionId" class="form-label">ID Partición</label>
         <input
-          type="text"
-          class="form-control"
-          id="partitionId"
-          placeholder="Ingrese el ID de la partición"
+        type="text"
+        class="form-control"
+        id="partitionId"
+        [(ngModel)]="partitionId"
+        name="partitionId"
+        placeholder="Ingrese el ID de la partición"
+        required
         />
       </div>
       <div class="mb-3">
@@ -17,7 +20,10 @@
           type="text"
           class="form-control"
           id="username"
+          [(ngModel)]="username"
+          name="username"
           placeholder="Ingrese su usuario"
+          required
         />
       </div>
       <div class="mb-3">
@@ -26,7 +32,10 @@
           type="password"
           class="form-control"
           id="password"
+          [(ngModel)]="password"
+          name="password"
           placeholder="Ingrese su contraseña"
+          required
         />
       </div>
       <div class="form-check mb-3">
@@ -35,7 +44,7 @@
           >Recordar usuario</label
         >
       </div>
-      <button type="submit" class="btn btn-primary w-100 mb-3">
+      <button type="submit" class="btn btn-primary w-100 mb-3" (click)="iniciarSesion()">
         Iniciar Sesión
       </button>
       <button

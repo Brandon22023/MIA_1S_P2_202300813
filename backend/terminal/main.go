@@ -2,6 +2,7 @@ package main
 
 import (
 	analyzer "terminal/analyzer"
+	commands "terminal/commands"
 	"fmt"
 	"strings"
 
@@ -57,6 +58,42 @@ func main() {
 			Output: output,
 		})
 	})
+	app.Post("/login", func(c *fiber.Ctx) error {
+		var req struct {
+			User string `json:"user"`
+			Pass string `json:"pass"`
+			ID   string `json:"id"`
+		}
+	
+		// Parsear el cuerpo de la solicitud
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(400).JSON(fiber.Map{
+				"error": "Solicitud inválida",
+			})
+		}
+		// Imprimir los datos recibidos en el terminal
+		fmt.Printf("Datos recibidos en el backend: %+v\n", req)
+	
+		// Crear una instancia de LOGIN con los datos recibidos
+		login := commands.LOGIN{
+			User: req.User,
+			Pass: req.Pass,
+			ID:   req.ID,
+		}
+	
+		// Ejecutar la lógica de login
+		if err := commands.CommandLogin(&login); err != nil {
+			return c.Status(401).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+	
+		// Respuesta exitosa
+		return c.JSON(fiber.Map{
+			"message": "Inicio de sesión exitoso",
+		})
+	})
+	
 
 	app.Listen(":3000")
 }

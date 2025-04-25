@@ -10,9 +10,9 @@ import (
 
 // LOGIN estructura que representa el comando login con sus parámetros
 type LOGIN struct {
-	user string // Usuario
-	pass string // Contraseña
-	id   string // ID del disco
+	User string // Usuario
+	Pass string // Contraseña
+	ID   string // ID del disco
 }
 
 /*
@@ -59,18 +59,18 @@ func ParseLogin(tokens []string) (string, error) {
 			if value == "" {
 				return "", errors.New("el usuario no puede estar vacío")
 			}
-			cmd.user = value
+			cmd.User = value
 		case "-pass":
 			if value == "" {
 				return "", errors.New("la contraseña no puede estar vacía")
 			}
-			cmd.pass = value
+			cmd.Pass = value
 		case "-id":
 			// Verifica que el id no esté vacío
 			if value == "" {
 				return "", errors.New("el id no puede estar vacío")
 			}
-			cmd.id = value
+			cmd.ID = value
 		default:
 			// Si el parámetro no es reconocido, devuelve un error
 			return "", fmt.Errorf("parámetro desconocido: %s", key)
@@ -78,22 +78,22 @@ func ParseLogin(tokens []string) (string, error) {
 	}
 
 	// Verifica que el parámetro -id haya sido proporcionado
-	if cmd.id == "" {
+	if cmd.ID == "" {
 		return "", errors.New("faltan parámetros requeridos: -id")
 	}
 
 	// Si no se proporcionó el tipo, se establece por defecto a "full"
-	if cmd.user == "" {
+	if cmd.User == "" {
 		return "", errors.New("faltan parámetros requeridos: -user")
 	}
 
 	// Si no se proporcionó el tipo, se establece por defecto a "full"
-	if cmd.pass == "" {
+	if cmd.Pass == "" {
 		return "", errors.New("faltan parámetros requeridos: -pass")
 	}
 
 	// Aquí se puede agregar la lógica para ejecutar el comando mkfs con los parámetros proporcionados
-	err := commandLogin(cmd)
+	err := CommandLogin(cmd)
 	if err != nil {
 		return "", err
 	}
@@ -101,17 +101,17 @@ func ParseLogin(tokens []string) (string, error) {
 		"-> Usuario: %s\n"+
 		"-> Contraseña: %s\n"+
 		"-> ID: %s",
-		cmd.user, cmd.pass, cmd.id), nil
+		cmd.User, cmd.Pass, cmd.ID), nil
 	
 }
 
-func commandLogin(login *LOGIN) error {
+func CommandLogin(login *LOGIN) error {
 	// Verificar si ya hay una sesión activa
     if stores.Auth.IsAuthenticated() {
         return fmt.Errorf("ya hay una sesión iniciada con el usuario: %s", stores.Auth.Username)
     }
 	// Obtener la partición montada
-	partitionSuperblock, _, partitionPath, err := stores.GetMountedPartitionSuperblock(login.id)
+	partitionSuperblock, _, partitionPath, err := stores.GetMountedPartitionSuperblock(login.ID)
 	if err != nil {
 		return fmt.Errorf("error al obtener la partición montada: %w", err)
 	}
@@ -147,7 +147,7 @@ func commandLogin(login *LOGIN) error {
 		// Verificar si es una línea de usuario (tipo U)
 		if len(fields) == 5 && fields[1] == "U" {
 			// Comparar el nombre de usuario (campo 3)
-			if strings.EqualFold(fields[3], login.user) {
+			if strings.EqualFold(fields[3], login.User) {
 				foundUser = true
 				userPassword = fields[4]
 				break
@@ -158,17 +158,17 @@ func commandLogin(login *LOGIN) error {
 	// Verificar si se encontró el usuario
 	if !foundUser {
 		
-		return fmt.Errorf("el usuario %s no existe", login.user)
+		return fmt.Errorf("el usuario %s no existe", login.User)
 	}
 
 	// Verificar la contraseña
-	if !strings.EqualFold(userPassword, login.pass) {
+	if !strings.EqualFold(userPassword, login.Pass) {
 		return fmt.Errorf("la contraseña no coincide")
 	}
-	fmt.Println("ID proporcionado:", login.id)
+	fmt.Println("ID proporcionado:", login.ID)
 
 	// If validation succeeds, set the auth state
-	stores.Auth.Login(login.user, login.pass, login.id)
+	stores.Auth.Login(login.User, login.Pass, login.ID)
 
 	return nil
 }

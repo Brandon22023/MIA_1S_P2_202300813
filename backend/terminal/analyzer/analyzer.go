@@ -40,8 +40,8 @@ func Analyzer(input string) (string, error) {
 	case "rep":
 		// Llama a la función CommandRep del paquete commands con los argumentos restantes
 		return commands.ParseRep(tokens[1:])
-	case "login":
-		return commands.ParseLogin(tokens[1:])
+	//case "login":
+		//return commands.ParseLogin(tokens[1:])
 	case "mounted":
 		return stores.PrintMountedPartitions()
 	case "logout":

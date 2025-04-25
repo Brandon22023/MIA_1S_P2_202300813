@@ -14,4 +14,9 @@ export class AnalyzerService {
     console.log('Enviando al servidor:', { command: input }); // Verifica el comando enviado
     return this.http.post<any>(this.apiUrl, { command: input });
   }
+  login(user: string, pass: string, id: string): Observable<any> {
+    const payload = { user, pass, id };
+    console.log('Enviando datos de login:', payload); // Verifica los datos enviados
+    return this.http.post<any>('http://localhost:3000/login', payload);
+  }
 }
