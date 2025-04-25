@@ -1,0 +1,24 @@
+mkdisk -size=5 -unit=M -fit=WF -path="/home/brandon/Escritorio/MIA_1S2025_P1_202300813/disks/DiscoLab.mia"
+
+fdisk -size=1 -type=P -unit=M -fit=BF -name="Particion1" -path="/home/brandon/Escritorio/MIA_1S2025_P1_202300813/disks/DiscoLab.mia"
+
+fdisk -size=1 -type=E -unit=M -fit=BF -name="Particion2" -path="/home/brandon/Escritorio/MIA_1S2025_P1_202300813/disks/DiscoLab.mia"
+mount -name="Particion1" -path="/home/brandon/Escritorio/MIA_1S2025_P1_202300813/disks/DiscoLab.mia"
+mounted
+mkfs -id=131A
+
+login -user=root -pass=123 -id=131A
+
+mkdir -path="/home"
+mkdir -path="/home/usac"
+mkdir -path="/home/work"
+mkdir -path="/home/usac/mia"
+
+
+rep -id=131A -path="/home/brandon/Escritorio/MIA_1S2025_P1_202300813/output/report_mbr.png" -name=mbr
+rep -id=131A -path="/home/brandon/Escritorio/MIA_1S2025_P1_202300813/output/report_inode.png" -name=inode
+rep -id=131A -path="/home/brandon/Escritorio/MIA_1S2025_P1_202300813/output/report_bm_inode.txt" -name=bm_inode
+rep -id=131A -path="/home/brandon/Escritorio/MIA_1S2025_P1_202300813/output/report_bm_block.txt" -name=bm_block
+rep -id=131A -path="/home/brandon/Escritorio/MIA_1S2025_P1_202300813/output/report_block.png" -name=block
+rep -id=131A -path="/home/brandon/Escritorio/MIA_1S2025_P1_202300813/output/report_sb.png" -name=sb
+rmdisk -path="/home/brandon/Escritorio/MIA_1S2025_P1_202300813/disks/DiscoLab.mia"

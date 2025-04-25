@@ -1,0 +1,164 @@
+digraph G {
+		node [shape=plaintext]
+		tabla [label=<
+			<table border="0" cellborder="1" cellspacing="0" cellpadding="4" style="rounded; font-family:Arial; font-size:12px;">
+				<!-- Encabezado principal -->
+				<tr>
+					<td colspan="2" bgcolor="#4A024A" style="color:white; font-size:16px; padding:8px; border-top-left-radius:8px; border-top-right-radius:8px;">
+						<b>REPORTE DE MBR</b>
+					</td>
+				</tr>
+				
+				<!-- Datos del MBR -->
+				<tr bgcolor="#EAD3EA">
+					<td><b>mbr_tamano</b></td>
+					<td>5242880</td>
+				</tr>
+				<tr>
+					<td><b>mbr_fecha_creacion</b></td>
+					<td>2025-03-30 16:02:40 -0600 CST</td>
+				</tr>
+				<tr bgcolor="#EAD3EA">
+					<td><b>mbr_disk_signature</b></td>
+					<td>44446027</td>
+				</tr>
+				
+				<!-- Separador visual -->
+				<tr><td colspan="2" height="4" bgcolor="#4A024A"></td></tr>
+            <!-- Partición 1 -->
+            <tr>
+                <td colspan="2" bgcolor="#720072" style="color:white; font-size:14px; padding:6px;">
+                    <b>PARTICIÓN 1</b>
+                </td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_status</b></td>
+                <td>1</td>
+            </tr>
+            <tr>
+                <td><b>part_type</b></td>
+                <td>P</td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_fit</b></td>
+                <td>B</td>
+            </tr>
+            <tr>
+                <td><b>part_start</b></td>
+                <td>153</td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_size</b></td>
+                <td>1048576</td>
+            </tr>
+            <tr>
+                <td><b>part_name</b></td>
+                <td>Particion1</td>
+            </tr>
+            
+            <!-- Separador visual entre particiones -->
+            <tr><td colspan="2" height="4" bgcolor="#4A024A"></td></tr>
+            <!-- Partición 2 -->
+            <tr>
+                <td colspan="2" bgcolor="#720072" style="color:white; font-size:14px; padding:6px;">
+                    <b>PARTICIÓN 2</b>
+                </td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_status</b></td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td><b>part_type</b></td>
+                <td>E</td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_fit</b></td>
+                <td>B</td>
+            </tr>
+            <tr>
+                <td><b>part_start</b></td>
+                <td>1048729</td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_size</b></td>
+                <td>1048576</td>
+            </tr>
+            <tr>
+                <td><b>part_name</b></td>
+                <td>Particion2</td>
+            </tr>
+            
+            <!-- Separador visual entre particiones -->
+            <tr><td colspan="2" height="4" bgcolor="#4A024A"></td></tr>
+            <!-- Partición 3 -->
+            <tr>
+                <td colspan="2" bgcolor="#720072" style="color:white; font-size:14px; padding:6px;">
+                    <b>PARTICIÓN 3</b>
+                </td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_status</b></td>
+                <td>N</td>
+            </tr>
+            <tr>
+                <td><b>part_type</b></td>
+                <td>N</td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_fit</b></td>
+                <td>N</td>
+            </tr>
+            <tr>
+                <td><b>part_start</b></td>
+                <td>-1</td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_size</b></td>
+                <td>-1</td>
+            </tr>
+            <tr>
+                <td><b>part_name</b></td>
+                <td>N</td>
+            </tr>
+            
+            <!-- Separador visual entre particiones -->
+            <tr><td colspan="2" height="4" bgcolor="#4A024A"></td></tr>
+            <!-- Partición 4 -->
+            <tr>
+                <td colspan="2" bgcolor="#720072" style="color:white; font-size:14px; padding:6px;">
+                    <b>PARTICIÓN 4</b>
+                </td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_status</b></td>
+                <td>N</td>
+            </tr>
+            <tr>
+                <td><b>part_type</b></td>
+                <td>N</td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_fit</b></td>
+                <td>N</td>
+            </tr>
+            <tr>
+                <td><b>part_start</b></td>
+                <td>-1</td>
+            </tr>
+            <tr bgcolor="#F5D0F5">
+                <td><b>part_size</b></td>
+                <td>-1</td>
+            </tr>
+            <tr>
+                <td><b>part_name</b></td>
+                <td>N</td>
+            </tr>
+            
+            <!-- Separador visual entre particiones -->
+            <tr><td colspan="2" height="4" bgcolor="#4A024A"></td></tr>
+	<!-- Pie de tabla -->
+	<tr>
+		<td colspan="2" bgcolor="#4A024A" style="border-bottom-left-radius:8px; border-bottom-right-radius:8px; height:4px;"></td>
+	</tr>
+	</table>>] }"

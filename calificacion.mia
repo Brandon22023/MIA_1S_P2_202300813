@@ -1,0 +1,129 @@
+mkdisk -param=x -size=30 -path=/home/brandon/Calificacion_MIA/Discos/DiscoN.mia
+
+mkdisk -tamaño=3000 -unit=K -path=/home/brandon/Calificacion_MIA/Discos/DiscoN.mia
+
+mkdisk -size=50 -unit=M -fit=FF -path=/home/brandon/Calificacion_MIA/Discos/Disco1.mia
+
+mkdisk -unit=K -size=51200 -fit=BF -path=/home/brandon/Calificacion_MIA/Discos/Disco2.mia
+
+mkdisk -size=13 -path=/home/brandon/Calificacion_MIA/Discos/Disco3.mia
+
+mkdisk -size=51200 -unit=K -path=/home/brandon/Calificacion_MIA/Discos/Disco4.mia
+
+mkdisk -size=20 -unit=M -fit=WF -path=/home/brandon/Calificacion_MIA/Discos/Disco5.mia
+
+mkdisk -size=50 -unit=M -fit=FF -path=/home/brandon/Calificacion_MIA/Discos/Disco6.mia
+
+mkdisk -size=50 -unit=M -fit=FF -path=/home/brandon/Calificacion_MIA/Discos/Disco7.mia
+
+mkdisk -size=51200 -unit=K -path=/home/brandon/Calificacion_MIA/Discos/Disco8.mia
+
+mkdisk -size=51200 -unit=K -path=/home/brandon/Calificacion_MIA/Discos/Disco9.mia
+
+mkdisk -size=51200 -unit=K -path=/home/brandon/Calificacion_MIA/Discos/Disco10.mia
+
+rmdisk -path=/home/brandon/Calificacion_MIA/Discos/DiscoN.mia
+
+rmdisk -path=/home/brandon/Calificacion_MIA/Discos/Disco6.mia
+
+rmdisk -path=/home/brandon/Calificacion_MIA/Discos/Disco7.mia
+
+rmdisk -path=/home/brandon/Calificacion_MIA/Discos/Disco8.mia
+
+rmdisk -path=/home/brandon/Calificacion_MIA/Discos/Disco9.mia
+
+rmdisk -path=/home/brandon/Calificacion_MIA/Discos/Disco10.mia
+
+fdisk -type=P -unit=B -name=PartErr -size=10485760 -path=/home/brandon/Calificacion_MIA/Discos/DiscoN.mia -fit=BF 
+
+fdisk -type=P -unit=B -name=Part11 -size=10485760 -path=/home/brandon/Calificacion_MIA/Discos/Disco1.mia -fit=BF
+
+fdisk -type=P -unit=B -name=Part12 -size=10240 -path=/home/brandon/Calificacion_MIA/Discos/Disco1.mia -fit=BF
+
+fdisk -type=P -unit=M -name=Part13 -size=10 -path=/home/brandon/Calificacion_MIA/Discos/Disco1.mia -fit=BF
+
+fdisk -type=P -unit=B -name=Part14 -size=10485760 -path=/home/brandon/Calificacion_MIA/Discos/Disco1.mia -fit=BF
+
+fdisk -type=P -unit=B -name=PartErr -size=10485760 -path=/home/brandon/Calificacion_MIA/Discos/Disco1.mia -fit=BF
+
+fdisk -type=P -unit=M -name=PartErr -size=20 -path=/home/brandon/Calificacion_MIA/Discos/Disco3.mia
+
+fdisk -type=P -unit=M -name=Part31 -size=4 -path=/home/brandon/Calificacion_MIA/Discos/Disco3.mia
+
+fdisk -type=P -unit=M -name=Part32 -size=4 -path=/home/brandon/Calificacion_MIA/Discos/Disco3.mia
+
+fdisk -type=P -unit=M -name=Part33 -size=1 -path=/home/brandon/Calificacion_MIA/Discos/Disco3.mia
+
+fdisk -type=E -unit=K -name=Part51 -size=5120 -path=/home/brandon/Calificacion_MIA/Discos/Disco5.mia -fit=BF
+
+fdisk -type=P -unit=K -name=Part53 -size=5120 -path=/home/brandon/Calificacion_MIA/Discos/Disco5.mia -fit=BF
+
+mount -path=/home/brandon/Calificacion_MIA/Discos/Disco1.mia -name=Part11
+
+mount -path=/home/brandon/Calificacion_MIA/Discos/Disco1.mia -name=Part12
+
+mount -path=/home/brandon/Calificacion_MIA/Discos/Disco1.mia -name=Part11
+
+mount -path=/home/brandon/Calificacion_MIA/Discos/Disco3.mia -name=Part0
+
+mount -path=/home/brandon/Calificacion_MIA/Discos/Disco3.mia -name=Part31
+
+mount -path=/home/brandon/Calificacion_MIA/Discos/Disco3.mia -name=Part32
+
+mount -path=/home/brandon/Calificacion_MIA/Discos/Disco5.mia -name=Part53
+
+mounted
+
+rep -id=A131 -path=/home/brandon/Calificacion_MIA/Reportes/p1_rE.jpg -name=mbr
+
+rep -id=131A -path=/home/brandon/Calificacion_MIA/Reportes/p1_r1_disk.jpg -name=disk
+
+rep -id=131A -path=/home/brandon/Calificacion_MIA/Reportes/p1_r2_mbr.jpg -name=mbr
+
+rep -id=133B -path=/home/brandon/Calificacion_MIA/Reportes/p1_rE_mbr.jpg -name=mbr
+
+rep -id=131B -path=/home/brandon/Calificacion_MIA/Reportes/p1_r3_disk.jpg -name=disk
+
+rep -id=132B -path=/home/brandon/Calificacion_MIA/Reportes/p1_r4_disk.jpg -name=mbr
+
+rep -id=IDx -path=/home/brandon/Calificacion_MIA/Reportes/p1_rE_mbr.jpg -name=mbr
+
+rep -id=131C -path=/home/brandon/Calificacion_MIA/Reportes/p1_r5_disk.jpg -name=disk
+
+rep -id=131C -path=/home/brandon/Calificacion_MIA/Reportes/p1_r6_mbr.jpg -name=mbr
+
+
+mkfs -type=full -id=131A
+
+login -user=root -pass=123 -id=131A
+
+login -user=root -pass=123 -id=131A
+
+mkdir -path="/bin"
+mkdir -path="/home/archivos/archivos24"
+mkdir -p -path="/home/archivos/user/docs/usac"
+mkdir -p -path="/home/archivos/carpeta1/carpeta2/carpeta3/carpeta4/carpeta5"
+
+logout
+logout
+
+login -user=root -pass=123 -id=131A
+
+mkfile -path=/home/archivos/user/docs/Tarea.txt -size=75
+mkfile -path=/home/archivos/user/docs/Tarea2.txt -size=768
+mkfile -path=/home/archivos/user/docs/Tarea3.txt -size=10 -cont=/home/brandon/Escritorio/NAME.txt
+
+mkfile -path="/home/archivos/noexiste/b1.txt"
+mkfile -path="/home/archivos/b1.txt" -size=-45
+
+mkfile -r -path=/home/archivos/user/docs/usac/archivos/proyectos/fase1/entrada.txt
+
+
+rep -id=131A -path=/home/brandon/Calificacion_MIA/Reportes/p4_r1_inode.jpg" -name=inode
+rep -id=131A -path=/home/brandon/Calificacion_MIA/Reportes/p4_r2_block.jpg" -name=block
+rep -id=131A -path=/home/brandon/Calificacion_MIA/Reportes/p4_r3_bm_inode.txt" -name=bm_inode
+rep -id=131A -path=/home/brandon/Calificacion_MIA/Reportes/p4_r4_bm_block.txt" -name=bm_block
+rep -id=131A -path=/home/brandon/Calificacion_MIA/Reportes/p4_r5_sb.jpg" -name=sb
+rep -id=131A -path=/home/brandon/Calificacion_MIA/Reportes/p4_r6_file.jpg" -path_file_ls=/home/archivos/user/docs/Tarea2.txt  -name=file
+rep -id=131A -path="/home/brandon/Calificacion_MIA/Reportes/p4_r8_tree.png" -name=tree
+logout

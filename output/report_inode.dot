@@ -1,0 +1,300 @@
+digraph G {
+        node [shape=plaintext, fontname="Times"]
+        edge [color="#4682B4", arrowhead=vee]
+    inode0 [label=<
+            <table border="0" cellborder="1" cellspacing="0" cellpadding="4" style="font-family:Times">
+                <!-- Encabezado -->
+                <tr>
+                    <td colspan="2" bgcolor="#4682B4" style="color:white; font-size:14px; padding:6px;">
+                        <b>REPORTE INODO 0</b>
+                    </td>
+                </tr>
+                
+                <!-- Datos básicos -->
+                <tr bgcolor="#E6F2FF"><td><b>i_uid</b></td><td>1</td></tr>
+                <tr><td><b>i_gid</b></td><td>1</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_size</b></td><td>0</td></tr>
+                <tr><td><b>i_atime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_ctime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr><td><b>i_mtime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_type</b></td><td>0</td></tr>
+                <tr><td><b>i_perm</b></td><td>777</td></tr>
+                
+                <!-- Bloques directos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUES DIRECTOS</b>
+                    </td>
+                </tr>
+        <tr><td>1</td><td>0</td></tr><tr><td>2</td><td>-1</td></tr><tr><td>3</td><td>-1</td></tr><tr><td>4</td><td>-1</td></tr><tr><td>5</td><td>-1</td></tr><tr><td>6</td><td>-1</td></tr><tr><td>7</td><td>-1</td></tr><tr><td>8</td><td>-1</td></tr><tr><td>9</td><td>-1</td></tr><tr><td>10</td><td>-1</td></tr><tr><td>11</td><td>-1</td></tr><tr><td>12</td><td>-1</td></tr>
+                <!-- Bloques indirectos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>13</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO DOBLE</b>
+                    </td>
+                </tr>
+                <tr><td><b>14</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO TRIPLE</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>15</b></td><td>-1</td></tr>
+            </table>>];
+        inode0 -> inode1;
+inode1 [label=<
+            <table border="0" cellborder="1" cellspacing="0" cellpadding="4" style="font-family:Times">
+                <!-- Encabezado -->
+                <tr>
+                    <td colspan="2" bgcolor="#4682B4" style="color:white; font-size:14px; padding:6px;">
+                        <b>REPORTE INODO 1</b>
+                    </td>
+                </tr>
+                
+                <!-- Datos básicos -->
+                <tr bgcolor="#E6F2FF"><td><b>i_uid</b></td><td>1</td></tr>
+                <tr><td><b>i_gid</b></td><td>1</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_size</b></td><td>27</td></tr>
+                <tr><td><b>i_atime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_ctime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr><td><b>i_mtime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_type</b></td><td>1</td></tr>
+                <tr><td><b>i_perm</b></td><td>777</td></tr>
+                
+                <!-- Bloques directos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUES DIRECTOS</b>
+                    </td>
+                </tr>
+        <tr><td>1</td><td>1</td></tr><tr><td>2</td><td>-1</td></tr><tr><td>3</td><td>-1</td></tr><tr><td>4</td><td>-1</td></tr><tr><td>5</td><td>-1</td></tr><tr><td>6</td><td>-1</td></tr><tr><td>7</td><td>-1</td></tr><tr><td>8</td><td>-1</td></tr><tr><td>9</td><td>-1</td></tr><tr><td>10</td><td>-1</td></tr><tr><td>11</td><td>-1</td></tr><tr><td>12</td><td>-1</td></tr>
+                <!-- Bloques indirectos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>13</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO DOBLE</b>
+                    </td>
+                </tr>
+                <tr><td><b>14</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO TRIPLE</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>15</b></td><td>-1</td></tr>
+            </table>>];
+        inode1 -> inode2;
+inode2 [label=<
+            <table border="0" cellborder="1" cellspacing="0" cellpadding="4" style="font-family:Times">
+                <!-- Encabezado -->
+                <tr>
+                    <td colspan="2" bgcolor="#4682B4" style="color:white; font-size:14px; padding:6px;">
+                        <b>REPORTE INODO 2</b>
+                    </td>
+                </tr>
+                
+                <!-- Datos básicos -->
+                <tr bgcolor="#E6F2FF"><td><b>i_uid</b></td><td>1</td></tr>
+                <tr><td><b>i_gid</b></td><td>1</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_size</b></td><td>0</td></tr>
+                <tr><td><b>i_atime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_ctime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr><td><b>i_mtime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_type</b></td><td>0</td></tr>
+                <tr><td><b>i_perm</b></td><td>664</td></tr>
+                
+                <!-- Bloques directos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUES DIRECTOS</b>
+                    </td>
+                </tr>
+        <tr><td>1</td><td>2</td></tr><tr><td>2</td><td>-1</td></tr><tr><td>3</td><td>-1</td></tr><tr><td>4</td><td>-1</td></tr><tr><td>5</td><td>-1</td></tr><tr><td>6</td><td>-1</td></tr><tr><td>7</td><td>-1</td></tr><tr><td>8</td><td>-1</td></tr><tr><td>9</td><td>-1</td></tr><tr><td>10</td><td>-1</td></tr><tr><td>11</td><td>-1</td></tr><tr><td>12</td><td>-1</td></tr>
+                <!-- Bloques indirectos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>13</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO DOBLE</b>
+                    </td>
+                </tr>
+                <tr><td><b>14</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO TRIPLE</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>15</b></td><td>-1</td></tr>
+            </table>>];
+        inode2 -> inode3;
+inode3 [label=<
+            <table border="0" cellborder="1" cellspacing="0" cellpadding="4" style="font-family:Times">
+                <!-- Encabezado -->
+                <tr>
+                    <td colspan="2" bgcolor="#4682B4" style="color:white; font-size:14px; padding:6px;">
+                        <b>REPORTE INODO 3</b>
+                    </td>
+                </tr>
+                
+                <!-- Datos básicos -->
+                <tr bgcolor="#E6F2FF"><td><b>i_uid</b></td><td>1</td></tr>
+                <tr><td><b>i_gid</b></td><td>1</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_size</b></td><td>0</td></tr>
+                <tr><td><b>i_atime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_ctime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr><td><b>i_mtime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_type</b></td><td>0</td></tr>
+                <tr><td><b>i_perm</b></td><td>664</td></tr>
+                
+                <!-- Bloques directos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUES DIRECTOS</b>
+                    </td>
+                </tr>
+        <tr><td>1</td><td>3</td></tr><tr><td>2</td><td>-1</td></tr><tr><td>3</td><td>-1</td></tr><tr><td>4</td><td>-1</td></tr><tr><td>5</td><td>-1</td></tr><tr><td>6</td><td>-1</td></tr><tr><td>7</td><td>-1</td></tr><tr><td>8</td><td>-1</td></tr><tr><td>9</td><td>-1</td></tr><tr><td>10</td><td>-1</td></tr><tr><td>11</td><td>-1</td></tr><tr><td>12</td><td>-1</td></tr>
+                <!-- Bloques indirectos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>13</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO DOBLE</b>
+                    </td>
+                </tr>
+                <tr><td><b>14</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO TRIPLE</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>15</b></td><td>-1</td></tr>
+            </table>>];
+        inode3 -> inode4;
+inode4 [label=<
+            <table border="0" cellborder="1" cellspacing="0" cellpadding="4" style="font-family:Times">
+                <!-- Encabezado -->
+                <tr>
+                    <td colspan="2" bgcolor="#4682B4" style="color:white; font-size:14px; padding:6px;">
+                        <b>REPORTE INODO 4</b>
+                    </td>
+                </tr>
+                
+                <!-- Datos básicos -->
+                <tr bgcolor="#E6F2FF"><td><b>i_uid</b></td><td>1</td></tr>
+                <tr><td><b>i_gid</b></td><td>1</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_size</b></td><td>0</td></tr>
+                <tr><td><b>i_atime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_ctime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr><td><b>i_mtime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_type</b></td><td>0</td></tr>
+                <tr><td><b>i_perm</b></td><td>664</td></tr>
+                
+                <!-- Bloques directos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUES DIRECTOS</b>
+                    </td>
+                </tr>
+        <tr><td>1</td><td>4</td></tr><tr><td>2</td><td>-1</td></tr><tr><td>3</td><td>-1</td></tr><tr><td>4</td><td>-1</td></tr><tr><td>5</td><td>-1</td></tr><tr><td>6</td><td>-1</td></tr><tr><td>7</td><td>-1</td></tr><tr><td>8</td><td>-1</td></tr><tr><td>9</td><td>-1</td></tr><tr><td>10</td><td>-1</td></tr><tr><td>11</td><td>-1</td></tr><tr><td>12</td><td>-1</td></tr>
+                <!-- Bloques indirectos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>13</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO DOBLE</b>
+                    </td>
+                </tr>
+                <tr><td><b>14</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO TRIPLE</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>15</b></td><td>-1</td></tr>
+            </table>>];
+        inode4 -> inode5;
+inode5 [label=<
+            <table border="0" cellborder="1" cellspacing="0" cellpadding="4" style="font-family:Times">
+                <!-- Encabezado -->
+                <tr>
+                    <td colspan="2" bgcolor="#4682B4" style="color:white; font-size:14px; padding:6px;">
+                        <b>REPORTE INODO 5</b>
+                    </td>
+                </tr>
+                
+                <!-- Datos básicos -->
+                <tr bgcolor="#E6F2FF"><td><b>i_uid</b></td><td>1</td></tr>
+                <tr><td><b>i_gid</b></td><td>1</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_size</b></td><td>0</td></tr>
+                <tr><td><b>i_atime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_ctime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr><td><b>i_mtime</b></td><td>2025-03-30T16:02:40-06:00</td></tr>
+                <tr bgcolor="#E6F2FF"><td><b>i_type</b></td><td>0</td></tr>
+                <tr><td><b>i_perm</b></td><td>664</td></tr>
+                
+                <!-- Bloques directos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUES DIRECTOS</b>
+                    </td>
+                </tr>
+        <tr><td>1</td><td>5</td></tr><tr><td>2</td><td>-1</td></tr><tr><td>3</td><td>-1</td></tr><tr><td>4</td><td>-1</td></tr><tr><td>5</td><td>-1</td></tr><tr><td>6</td><td>-1</td></tr><tr><td>7</td><td>-1</td></tr><tr><td>8</td><td>-1</td></tr><tr><td>9</td><td>-1</td></tr><tr><td>10</td><td>-1</td></tr><tr><td>11</td><td>-1</td></tr><tr><td>12</td><td>-1</td></tr>
+                <!-- Bloques indirectos -->
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>13</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO DOBLE</b>
+                    </td>
+                </tr>
+                <tr><td><b>14</b></td><td>-1</td></tr>
+                
+                <tr>
+                    <td colspan="2" bgcolor="#5F9EA0" style="color:white; padding:4px;">
+                        <b>BLOQUE INDIRECTO TRIPLE</b>
+                    </td>
+                </tr>
+                <tr bgcolor="#F0F8FF"><td><b>15</b></td><td>-1</td></tr>
+            </table>>];
+        
+        graph [fontname="Times"];
+        node [fontname="Times"];
+    }

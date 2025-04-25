@@ -1,0 +1,26 @@
+<div class="container mt-3" style="font-family: 'Times New Roman', Times, serif;">
+  <div class="d-flex justify-content-between mb-3">
+    <audio id="clickSound" src="../assets/sounds/pick-92276.mp3"></audio>
+    <input type="file" #fileInput class="btn btn-primary btn-lg" style="display: none;" (change)="onFileSelected($event)">
+    <button class="btn btn-elegir-archivo btn-lg" (click)="fileInput.click(); playClickSound()">Elegir Archivo</button>
+    <button class="btn btn-ejecutar btn-lg" (click)="ejecutar()">Ejecutar</button>
+    <button class="btn btn-limpiar btn-lg" (click)="limpiar()">Limpiar</button>
+  </div>
+
+  <div class="mb-3">
+    <h5>Entrada</h5>
+    <textarea class="form-control entrada-textarea" rows="15" [(ngModel)]="entrada"></textarea>
+  </div>
+  
+  <div class="mb-3">
+    <h5>Salida</h5>
+    <textarea class="form-control salida-textarea" rows="15" readonly [(ngModel)]="salida"></textarea>
+  </div>
+  <!-- Modal simple para mostrar el mensaje de éxito -->
+  <div id="successModal" class="modal-overlay" [ngClass]="{'show': isModalVisible}">
+    <div class="modal-content" [ngClass]="{'fade-out': isModalClosing}">
+      <span class="close" (click)="closeModal()">&times;</span>
+      <p>{{ mensaje }}</p>
+    </div>
+  </div>
+</div>

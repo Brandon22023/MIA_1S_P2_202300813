@@ -1,0 +1,11 @@
+digraph G {
+        node [shape=plaintext, fontname="Times"]
+        edge [color="#4682B4", arrowhead=vee]
+        rankdir=LR;
+    block0 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr><td bgcolor='#5F9EA0' style='color:white;' colspan='2'><b>Bloque Carpeta 0</b></td></tr><tr><td><b>name</b></td><td><b>inodo</b></td></tr><tr><td>.</td><td>0</td></tr><tr><td>..</td><td>0</td></tr><tr><td>users.txt</td><td>1</td></tr><tr><td>home</td><td>2</td></tr></table>>];block1 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr><td bgcolor='#5F9EA0' style='color:white;'><b>Bloque Archivo 1</b></td></tr><tr><td>1,G,root
+1,U,root,root,123
+</td></tr></table>>];block2 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr><td bgcolor='#5F9EA0' style='color:white;' colspan='2'><b>Bloque Carpeta 2</b></td></tr><tr><td><b>name</b></td><td><b>inodo</b></td></tr><tr><td>.</td><td>2</td></tr><tr><td>..</td><td>0</td></tr><tr><td>usac</td><td>3</td></tr><tr><td>work</td><td>4</td></tr></table>>];block3 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr><td bgcolor='#5F9EA0' style='color:white;' colspan='2'><b>Bloque Carpeta 3</b></td></tr><tr><td><b>name</b></td><td><b>inodo</b></td></tr><tr><td>.</td><td>3</td></tr><tr><td>..</td><td>2</td></tr><tr><td>mia</td><td>5</td></tr><tr><td>-</td><td>-1</td></tr></table>>];block4 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr><td bgcolor='#5F9EA0' style='color:white;' colspan='2'><b>Bloque Carpeta 4</b></td></tr><tr><td><b>name</b></td><td><b>inodo</b></td></tr><tr><td>.</td><td>4</td></tr><tr><td>..</td><td>2</td></tr><tr><td>-</td><td>-1</td></tr><tr><td>-</td><td>-1</td></tr></table>>];block5 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr><td bgcolor='#5F9EA0' style='color:white;' colspan='2'><b>Bloque Carpeta 5</b></td></tr><tr><td><b>name</b></td><td><b>inodo</b></td></tr><tr><td>.</td><td>5</td></tr><tr><td>..</td><td>3</td></tr><tr><td>-</td><td>-1</td></tr><tr><td>-</td><td>-1</td></tr></table>>];block0 -> block1;
+block1 -> block2;
+block2 -> block3;
+block3 -> block4;
+block4 -> block5;}
