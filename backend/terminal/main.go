@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	analyzer "terminal/analyzer"
 	commands "terminal/commands"
-	"fmt"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -125,6 +127,46 @@ func main() {
 			"message": "Inicio de sesión exitoso",
 		})
 	})
+
+	app.Get("/disks", func(c *fiber.Ctx) error {
+		// Ruta de la carpeta "info_disk"
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{
+				"error": "No se pudo obtener el directorio actual",
+			})
+		}
+		infoDiskDir := filepath.Join(currentDir, "info_disk")
+	
+		// Verificar si la carpeta existe
+		if _, err := os.Stat(infoDiskDir); os.IsNotExist(err) {
+			return c.Status(404).JSON(fiber.Map{
+				"error": "La carpeta info_disk no existe",
+			})
+		}
+	
+		// Leer los archivos JSON en la carpeta
+		files, err := os.ReadDir(infoDiskDir)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{
+				"error": "No se pudo leer la carpeta info_disk",
+			})
+		}
+	
+		// Crear una lista con los nombres de los discos
+		var disks []string
+		for _, file := range files {
+			if strings.HasSuffix(file.Name(), ".json") {
+				disks = append(disks, strings.TrimSuffix(file.Name(), ".json"))
+			}
+		}
+	
+		return c.JSON(fiber.Map{
+			"disks": disks,
+		})
+	})
+
+
 	
 
 	app.Listen(":3000")

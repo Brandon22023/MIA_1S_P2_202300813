@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -18,5 +18,10 @@ export class AnalyzerService {
     const payload = { user, pass, id };
     console.log('Enviando datos de login:', payload); // Verifica los datos enviados
     return this.http.post<any>('http://localhost:3000/login', payload);
+  }
+  getDisks(): Observable<string[]> {
+    return this.http.get<{ disks: string[] }>('http://localhost:3000/disks').pipe(
+      map((response) => response.disks)
+    );
   }
 }

@@ -17,21 +17,9 @@
     <div class="main">
       <h4>Discos</h4>
       <div class="file-grid">
-        <div class="file-item">
+        <div class="file-item" *ngFor="let disk of disks">
           <span>💾</span>
-          <p>Disco Local (C:)</p>
-        </div>
-        <div class="file-item">
-          <span>💾</span>
-          <p>Disco Local (D:)</p>
-        </div>
-        <div class="file-item">
-          <span>💾</span>
-          <p>Disco Local (E:)</p>
-        </div>
-        <div class="file-item">
-          <span>💾</span>
-          <p>Disco Local (F:)</p>
+          <p>{{ disk }}</p>
         </div>
       </div>
     </div>
