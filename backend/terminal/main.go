@@ -344,6 +344,21 @@ func main() {
 		})
 	})
 
+	app.Post("/logout", func(c *fiber.Ctx) error {
+		// Llamar al comando de logout
+		message, err := commands.CommandLogout()
+		if err != nil {
+			return c.Status(400).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+	
+		// Respuesta exitosa
+		return c.JSON(fiber.Map{
+			"message": message,
+		})
+	})
+
 
 	
 

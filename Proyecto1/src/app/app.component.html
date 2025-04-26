@@ -23,8 +23,19 @@
       Ejecutar
     </button>
     <button class="btn btn-limpiar btn-lg" (click)="limpiar()">Limpiar</button>
-    <button class="btn btn-elegir-archivo btn-lg" (click)="irALogin()">
+    <button
+      class="btn btn-elegir-archivo btn-lg"
+      *ngIf="!isAuthenticated"
+      (click)="irALogin()"
+    >
       Ir a Login
+    </button>
+    <button
+      class="btn btn-limpiar btn-lg"
+      *ngIf="isAuthenticated"
+      (click)="cerrarSesion()"
+    >
+      Cerrar Sesión
     </button>
     <button class="btn btn-elegir-archivo btn-lg" (click)="irVisualizador()">
       Ir a Visualizador

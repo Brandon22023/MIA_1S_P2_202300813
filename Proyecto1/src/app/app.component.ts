@@ -22,6 +22,7 @@ export class AppComponent {
   mensaje: string = ''; // esto sera para mostrar el exito de lo metico
   showLogin: boolean = false; // Controla si se muestra el LoginComponent
   showvisualizador: boolean = false; // Controla si se muestra el visualizador
+  isAuthenticated: boolean = false;
 
   constructor(
     private router: Router,
@@ -31,6 +32,22 @@ export class AppComponent {
   irALogin(): void {
     this.showLogin = true; // Cambia a la vista del login
     window.history.pushState({}, '', '/login'); // Actualiza manualmente la URL a /login
+  }
+  cerrarSesion(): void {
+    this.analyzerService.logout().subscribe({
+      next: (response) => {
+        console.log('Respuesta del servidor:', response);
+        alert(response.message || 'Sesión cerrada exitosamente');
+        this.isAuthenticated = false; // Cambiar el estado de autenticación
+        this.showLogin = false;
+        this.showvisualizador = false;
+        window.history.pushState({}, '', '/'); // Regresar a la vista principal
+      },
+      error: (error) => {
+        console.error('Error al cerrar sesión:', error);
+        alert(error.error?.message || 'Error al cerrar sesión');
+      },
+    });
   }
 
   @ViewChild('fileInput') fileInput!: ElementRef;
@@ -136,6 +153,7 @@ export class AppComponent {
   irVisualizador(): void {
   this.showvisualizador = true; // Cambia a la vista del visualizador
   this.showLogin = false; // Asegúrate de ocultar el login
+  this.isAuthenticated = true; // Cambiar el estado de autenticación al acceder al visualizador
   window.history.pushState({}, '', '/visualizador'); // Actualiza manualmente la URL
 }
 
