@@ -87,6 +87,30 @@ func ExportDiskInfo(diskPath string) error {
         diskInfo.Partitions = append(diskInfo.Partitions, partitionInfo)
     }
 
+    // Verificar si el archivo JSON ya existe
+    outputFilePath := filepath.Join(outDir, strings.ReplaceAll(diskName, ".mia", ".json"))
+    if _, err := os.Stat(outputFilePath); err == nil {
+        // Leer el archivo existente
+        existingData, err := os.ReadFile(outputFilePath)
+        if err != nil {
+            return fmt.Errorf("error al leer el archivo JSON existente: %v", err)
+        }
+
+        var existingDiskInfo DiskInfo
+        if err := json.Unmarshal(existingData, &existingDiskInfo); err != nil {
+            return fmt.Errorf("error al parsear el archivo JSON existente: %v", err)
+        }
+
+        // Actualizar los datos existentes con los nuevos
+        existingDiskInfo.Size = diskInfo.Size
+        existingDiskInfo.Signature = diskInfo.Signature
+        existingDiskInfo.Fit = diskInfo.Fit
+        existingDiskInfo.Partitions = diskInfo.Partitions
+
+        // Usar los datos actualizados
+        diskInfo = existingDiskInfo
+    }
+
     // Convertir DiskInfo a JSON
     jsonData, err := json.MarshalIndent(diskInfo, "", "  ")
     if err != nil {
@@ -94,7 +118,7 @@ func ExportDiskInfo(diskPath string) error {
     }
 
     // Guardar el JSON en un archivo dentro de la carpeta "info_disk"
-    outputFilePath := filepath.Join(outDir, strings.ReplaceAll(diskName, ".mia", ".json"))
+    
     err = os.WriteFile(outputFilePath, jsonData, 0644)
     if err != nil {
         return fmt.Errorf("error al guardar el archivo JSON: %v", err)

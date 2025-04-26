@@ -87,16 +87,8 @@ func main() {
 		}
 		infoDiskDir := filepath.Join(currentDir, "info_disk")
 
-		// Limpiar la carpeta "info_disk" antes de exportar
-		if _, err := os.Stat(infoDiskDir); !os.IsNotExist(err) {
-			err = commands.CleanDirectory(infoDiskDir)
-			if err != nil {
-				return c.Status(500).JSON(CommandResponse{
-					Output: fmt.Sprintf("Error al limpiar la carpeta info_disk: %s", err.Error()),
-				})
-			}
-		} else {
-			// Crear la carpeta si no existe
+		// Crear la carpeta si no existe
+		if _, err := os.Stat(infoDiskDir); os.IsNotExist(err) {
 			err = os.MkdirAll(infoDiskDir, os.ModePerm)
 			if err != nil {
 				return c.Status(500).JSON(CommandResponse{
@@ -328,7 +320,7 @@ func main() {
 			// Agregar la partición procesada
 			processedPartitions = append(processedPartitions, map[string]interface{}{
 				"name":  name,
-				"size":  fmt.Sprintf("%.1f MB", sizeMB),
+				"size":  fmt.Sprintf("%.1f MB (%.0f bytes)", sizeMB, sizeBytes), // Formato similar al de los discos
 				"type":  typeDescription,
 				"fit":   fit,
 				"start": fmt.Sprintf("%d", int(start)),
