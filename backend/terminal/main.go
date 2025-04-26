@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -77,8 +78,35 @@ func main() {
 		fmt.Println("aqui empezara la salida")
         fmt.Println("---------------------------------")
 
-        // Proceso final: Exportar información de cada path
-        for _, diskPath := range paths {
+        // Ruta de la carpeta "info_disk"
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return c.Status(500).JSON(CommandResponse{
+				Output: "Error al obtener el directorio actual",
+			})
+		}
+		infoDiskDir := filepath.Join(currentDir, "info_disk")
+
+		// Limpiar la carpeta "info_disk" antes de exportar
+		if _, err := os.Stat(infoDiskDir); !os.IsNotExist(err) {
+			err = commands.CleanDirectory(infoDiskDir)
+			if err != nil {
+				return c.Status(500).JSON(CommandResponse{
+					Output: fmt.Sprintf("Error al limpiar la carpeta info_disk: %s", err.Error()),
+				})
+			}
+		} else {
+			// Crear la carpeta si no existe
+			err = os.MkdirAll(infoDiskDir, os.ModePerm)
+			if err != nil {
+				return c.Status(500).JSON(CommandResponse{
+					Output: fmt.Sprintf("Error al crear la carpeta info_disk: %s", err.Error()),
+				})
+			}
+		}
+
+		// Exportar información de cada path
+		for _, diskPath := range paths {
 			err := commands.ExportDiskInfo(diskPath)
 			if err != nil {
 				output += fmt.Sprintf("\nError al exportar información del disco en %s: %s", diskPath, err.Error())
@@ -153,11 +181,51 @@ func main() {
 			})
 		}
 	
-		// Crear una lista con los nombres de los discos
-		var disks []string
+		// Crear una lista con la información de los discos
+		var disks []map[string]interface{}
 		for _, file := range files {
 			if strings.HasSuffix(file.Name(), ".json") {
-				disks = append(disks, strings.TrimSuffix(file.Name(), ".json"))
+				// Leer el contenido del archivo JSON
+				filePath := filepath.Join(infoDiskDir, file.Name())
+				data, err := os.ReadFile(filePath)
+				if err != nil {
+					continue // Ignorar archivos que no se puedan leer
+				}
+	
+				// Parsear el JSON
+				var diskInfo map[string]interface{}
+				if err := json.Unmarshal(data, &diskInfo); err != nil {
+					continue // Ignorar archivos con formato inválido
+				}
+	
+				// Calcular el tamaño en MB y bytes
+				sizeBytes, ok := diskInfo["size"].(float64)
+				if !ok {
+					continue // Ignorar si el tamaño no es válido
+				}
+				sizeMB := sizeBytes / 1000 / 1000 // Convertir a MB usando base 1000
+	
+				// Manejar particiones
+				partitions, ok := diskInfo["partitions"].([]interface{})
+				mountedPartitions := "No existen particiones"
+				if ok && len(partitions) > 0 {
+					count := 0
+					for _, partition := range partitions {
+						part, ok := partition.(map[string]interface{})
+						if ok && part["status"] == "1" {
+							count++
+						}
+					}
+					mountedPartitions = fmt.Sprintf("%d", count)
+				}
+	
+				// Agregar la información del disco a la lista
+				disks = append(disks, map[string]interface{}{
+					"name":              diskInfo["name"],
+					"size":              fmt.Sprintf("%.1f MB (%.0f bytes)", sizeMB, sizeBytes),
+					"fit":               diskInfo["fit"],
+					"mounted_partitions": mountedPartitions,
+				})
 			}
 		}
 	

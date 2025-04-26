@@ -14,12 +14,32 @@
       </ul>
     </div>
 
+    
     <div class="main">
       <h4>Discos</h4>
       <div class="file-grid">
         <div class="file-item" *ngFor="let disk of disks">
           <span>💾</span>
-          <p>{{ disk }}</p>
+          <p>{{ disk.name }}</p>
+          <div class="disk-info">
+            <h5>💡 Información del Disco</h5>
+            <div class="info-item">
+              <span>🔖</span>
+              <p>Nombre: <strong>{{ disk.name }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>📏</span>
+              <p>Tamaño: <strong>{{ disk.size }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>⚙️</span>
+              <p>Fit: <strong>{{ disk.fit }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>🗄️</span>
+              <p>Particiones Montadas: <strong>{{ disk.mounted_partitions }}</strong></p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

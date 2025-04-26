@@ -48,7 +48,8 @@ func ExportDiskInfo(diskPath string) error {
         if err != nil {
             return fmt.Errorf("error al crear la carpeta de destino: %v", err)
         }
-    }
+    } 
+    
 
     // Leer el MBR del archivo binario
     mbr := &structures.MBR{}
@@ -100,5 +101,22 @@ func ExportDiskInfo(diskPath string) error {
     }
 
     fmt.Printf("Información del disco exportada exitosamente a %s\n", outputFilePath)
+    return nil
+}
+// cleanDirectory elimina todos los archivos dentro de una carpeta
+func CleanDirectory(dirPath string) error {
+    files, err := os.ReadDir(dirPath)
+    if err != nil {
+        return err
+    }
+
+    for _, file := range files {
+        filePath := filepath.Join(dirPath, file.Name())
+        err = os.RemoveAll(filePath) // Eliminar archivos y subdirectorios
+        if err != nil {
+            return err
+        }
+    }
+
     return nil
 }

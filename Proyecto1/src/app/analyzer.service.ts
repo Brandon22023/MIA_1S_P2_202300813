@@ -19,8 +19,8 @@ export class AnalyzerService {
     console.log('Enviando datos de login:', payload); // Verifica los datos enviados
     return this.http.post<any>('http://localhost:3000/login', payload);
   }
-  getDisks(): Observable<string[]> {
-    return this.http.get<{ disks: string[] }>('http://localhost:3000/disks').pipe(
+  getDisks(): Observable<{ name: string; size: string; fit: string; mounted_partitions: string }[]> {
+    return this.http.get<{ disks: { name: string; size: string; fit: string; mounted_partitions: string }[] }>('http://localhost:3000/disks').pipe(
       map((response) => response.disks)
     );
   }

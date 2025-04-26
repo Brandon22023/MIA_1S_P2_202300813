@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 export class VisualizadorComponent {
 
   @Output() volverEvent = new EventEmitter<void>(); // Evento para volver al componente principal
-  disks: string[] = []; // Lista de discos
+  disks: { name: string; size: string; fit: string; mounted_partitions: string }[] = []; // Lista de discos
   constructor(private analyzerService: AnalyzerService) {}
 
   ngOnInit(): void {
