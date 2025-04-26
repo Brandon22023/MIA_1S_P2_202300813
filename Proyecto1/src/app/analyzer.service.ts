@@ -24,4 +24,16 @@ export class AnalyzerService {
       map((response) => response.disks)
     );
   }
+  getPartitions(diskName: string): Observable<any> {
+    return this.http.get<{ partitions?: any[]; message?: string }>(
+      `http://localhost:3000/partitions/${diskName}`
+    ).pipe(
+      map((response) => {
+        if (response.message) {
+          return { message: response.message }; // Si no hay particiones
+        }
+        return { partitions: response.partitions }; // Si hay particiones
+      })
+    );
+  }
 }

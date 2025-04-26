@@ -234,6 +234,116 @@ func main() {
 		})
 	})
 
+	app.Get("/partitions/:diskName", func(c *fiber.Ctx) error {
+		diskName := c.Params("diskName") // Obtener el nombre del disco desde la URL
+		fmt.Println("Disco solicitado:", diskName) // <-- Agrega este log
+
+		// Eliminar la extensión ".mia" si existe
+		diskName = strings.TrimSuffix(diskName, ".mia")
+	
+		// Ruta del archivo JSON del disco
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{
+				"error": "No se pudo obtener el directorio actual",
+			})
+		}
+		diskFilePath := filepath.Join(currentDir, "info_disk", diskName+".json")
+	
+		// Leer el archivo JSON
+		data, err := os.ReadFile(diskFilePath)
+		if err != nil {
+			fmt.Println("Error al leer el archivo JSON:", err) // <-- Agrega este log
+			return c.Status(404).JSON(fiber.Map{
+				"error": "No se pudo leer el archivo del disco",
+			})
+		}
+	
+		// Parsear el JSON
+		var diskInfo map[string]interface{}
+		if err := json.Unmarshal(data, &diskInfo); err != nil {
+			fmt.Println("Error al parsear el JSON:", err) // <-- Agrega este log
+			return c.Status(500).JSON(fiber.Map{
+				"error": "Error al parsear el archivo JSON",
+			})
+		}
+	
+		// Procesar las particiones
+		partitions, ok := diskInfo["partitions"].([]interface{})
+		if !ok || len(partitions) == 0 {
+			fmt.Println("No existen particiones para el disco:", diskName) // <-- Agrega este log
+			return c.JSON(fiber.Map{
+				"message": "No existen particiones para dicho disco",
+			})
+		}
+	
+		var processedPartitions []map[string]interface{}
+		for _, partition := range partitions {
+			part, ok := partition.(map[string]interface{})
+			if !ok {
+				continue
+			}
+	
+			// Procesar el nombre
+			name, _ := part["name"].(string)
+			name = strings.TrimSpace(strings.ReplaceAll(name, "\u0000", ""))
+	
+			// Procesar el tamaño
+			sizeBytes, _ := part["size"].(float64)
+			sizeMB := sizeBytes / 1000 / 1000 // Convertir a MB usando base 1000
+	
+			// Procesar el tipo
+			partType, _ := part["type"].(string)
+			var typeDescription string
+			if partType == "P" {
+				typeDescription = "Primaria"
+			} else if partType == "E" {
+				typeDescription = "Extendida"
+			} else {
+				typeDescription = "Desconocido"
+			}
+	
+			// Procesar el estado
+			status, _ := part["status"].(string)
+			var stateDescription string
+			if status == "1" {
+				stateDescription = "Montada"
+			} else {
+				stateDescription = "No montada"
+			}
+	
+			// Procesar el ID
+			id, _ := part["id"].(string)
+			id = strings.TrimSpace(strings.ReplaceAll(id, "\u0000", ""))
+			if id == "" || id == "N" {
+				id = "No está montada"
+			}
+	
+			// Procesar el fit
+			fit, _ := part["fit"].(string)
+	
+			// Procesar el inicio
+			start, _ := part["start"].(float64)
+	
+			// Agregar la partición procesada
+			processedPartitions = append(processedPartitions, map[string]interface{}{
+				"name":  name,
+				"size":  fmt.Sprintf("%.1f MB", sizeMB),
+				"type":  typeDescription,
+				"fit":   fit,
+				"start": fmt.Sprintf("%d", int(start)),
+				"state": stateDescription,
+				"id":    id,
+			})
+		}
+	
+		fmt.Println("Particiones procesadas:", processedPartitions) // <-- Agrega este log
+	
+		return c.JSON(fiber.Map{
+			"partitions": processedPartitions,
+		})
+	})
+
 
 	
 

@@ -14,11 +14,10 @@
       </ul>
     </div>
 
-    
-    <div class="main">
+    <div class="main" *ngIf="!selectedDisk">
       <h4>Discos</h4>
       <div class="file-grid">
-        <div class="file-item" *ngFor="let disk of disks">
+        <div class="file-item" *ngFor="let disk of disks" (click)="selectDisk(disk)">
           <span>💾</span>
           <p>{{ disk.name }}</p>
           <div class="disk-info">
@@ -43,7 +42,52 @@
         </div>
       </div>
     </div>
-  </div>
+    
+    <!-- Vista de particiones -->
+    <div class="main" *ngIf="selectedDisk">
+      <h4>Particiones del Disco: {{ selectedDisk }}</h4>
+      <button class="btn btn-volver-disco" (click)="volverADiscos()">🔙 Volver a Discos</button>
+      <div *ngIf="partitions.length === 0" class="no-partitions">
+        <p>No existen particiones para dicho disco</p>
+      </div>
+      <div class="file-grid" *ngIf="partitions.length > 0">
+        <div 
+          class="file-item" 
+          *ngFor="let partition of partitions" 
+          [ngClass]="{'mounted': partition.state === 'Montada', 'not-mounted': partition.state !== 'Montada'}"
+        >
+          <span>🖴</span>
+          <p>{{ partition.name }}</p>
+          <div class="partition-info">
+            <h5>💡 Información de la Partición</h5>
+            <div class="info-item">
+              <span>🏷️</span>
+              <p>Nombre: <strong>{{ partition.name }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>📏</span>
+              <p>Tamaño: <strong>{{ partition.size }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>🗃️</span>
+              <p>Tipo: <strong>{{ partition.type }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>🧩</span>
+              <p>Fit: <strong>{{ partition.fit }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>{{ partition.state === 'Montada' ? '✅' : '❌' }}</span>
+              <p>Estado: <strong>{{ partition.state }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>🆔</span>
+              <p>ID: <strong>{{ partition.id }}</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
   <div class="footer">
     <button class="btn btn-secondary" (click)="volver()">Volver</button>

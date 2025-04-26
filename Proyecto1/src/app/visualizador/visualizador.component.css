@@ -193,3 +193,106 @@
 .file-item .disk-info .info-item p strong {
   color: #00ffff; /* Cian brillante */
 }
+
+/* Información de la partición */
+.file-item .partition-info {
+  position: absolute;
+  bottom: -250%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  background: rgba(0, 0, 128, 0.7); /* Azul translúcido */
+  color: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 10;
+  width: 250px;
+  text-align: left;
+}
+
+.file-item:hover .partition-info {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -10px);
+}
+
+.file-item .partition-info h5 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #00ffff; /* Cian brillante */
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.file-item .partition-info .info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.file-item .partition-info .info-item span {
+  font-size: 15px;
+  margin-right: 10px;
+  color: #ffcc00; /* Amarillo brillante */
+}
+
+.file-item .partition-info .info-item p {
+  font-size: 14px;
+  margin: 0;
+  color: #fff;
+}
+
+.file-item .partition-info .info-item p strong {
+  color: #00ffff; /* Cian brillante */
+}
+/*boton de volver */
+.btn-volver-disco {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(135deg, #723ead, #4156ca); /* Degradado naranja */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+  margin-bottom: 20px; /* Espaciado inferior */
+}
+
+.btn-volver-disco:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+}
+
+/* Sombreado verde para particiones montadas */
+.file-item.mounted {
+  background: linear-gradient(to top, rgba(0, 255, 0, 0.5), rgba(0, 255, 0, 0) 80%);
+  border: 2px solid rgba(0, 255, 0, 0.7); /* Borde verde */
+}
+
+/* Sombreado rojo para particiones no montadas */
+.file-item.not-mounted {
+  background: linear-gradient(to top, rgba(255, 0, 0, 0.5), rgba(255, 0, 0, 0) 80%);
+  border: 2px solid rgba(255, 0, 0, 0.7); /* Borde rojo */
+}
+
+/* Mantener el diseño general */
+.file-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+  cursor: pointer;
+}
+
+.file-item:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7);
+}

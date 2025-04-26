@@ -6,3 +6,10 @@ body {
     height: 100vh; /* Asegura que el fondo cubra toda la altura de la ventana */
  
 }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+  }
