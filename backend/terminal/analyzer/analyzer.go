@@ -48,6 +48,8 @@ func Analyzer(input string) (string, error) {
 		return commands.CommandLogout()
 	case "mkfile":
 		return commands.ParserMkfile(tokens[1:])
+	case "unmount":
+		return commands.ParseUnmount(tokens[1:])	
 	default:
 		// Si el comando no es reconocido, devuelve un error
 		return "", fmt.Errorf("comando desconocido: %s", tokens[0])

@@ -23,7 +23,7 @@ type MOUNT struct {
 	mount -path=/home/Disco2.mia -name=Part1 #id=342a
 	mount -path=/home/Disco3.mia -name=Part2 #id=343a
 */
-
+var mountedPaths []string
 // CommandMount parsea el comando mount y devuelve una instancia de MOUNT
 func ParseMount(tokens []string) (string, error) {
 	cmd := &MOUNT{} // Crea una nueva instancia de MOUNT
@@ -92,6 +92,8 @@ func ParseMount(tokens []string) (string, error) {
 
 func commandMount(mount *MOUNT) (string, error) {
 
+	mountedPaths := AddMountedPath(mount.path)
+    fmt.Println("Lista de paths montados:", mountedPaths)
 	// Verificar si la partición existe en el disco
     err := VerifyPartitionExists(mount.path, mount.name)
     if err != nil {
@@ -200,4 +202,17 @@ func VerifyPartitionExists(path string, name string) error {
 
     // Si no se encuentra la partición, devolver un error
     return fmt.Errorf("error: la partición con el nombre '%s' no existe en el disco o ya fue montada '%s'", name, path)
+}
+
+// AddMountedPath agrega un path a la lista de montajes y devuelve la lista actualizada
+func AddMountedPath(path string) []string {
+    // Verificar si el path ya está en la lista
+    for _, p := range mountedPaths {
+        if p == path {
+            return mountedPaths // Si ya existe, no lo agrega de nuevo
+        }
+    }
+    // Agregar el path a la lista
+    mountedPaths = append(mountedPaths, path)
+    return mountedPaths
 }

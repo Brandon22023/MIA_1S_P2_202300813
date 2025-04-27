@@ -22,6 +22,7 @@ type CommandResponse struct {
 }
 
 func main() {
+	var paths []string // Lista para almacenar los paths de mkdir
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{}))
@@ -38,7 +39,7 @@ func main() {
 
 		commandsList := strings.Split(req.Command, "\n")
 		output := ""
-		var paths []string // Lista para almacenar los paths de mkdir
+		
         // Imprime el comando recibido
     	fmt.Println("Comando recibido:", req.Command)
 		for _, cmd := range commandsList {
