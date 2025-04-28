@@ -28,89 +28,98 @@ type FDISK struct {
 	fdisk -size=300 -path=/home/Disco1.mia -name=Particion1
 	fdisk -type=E -path=/home/Disco2.mia -Unit=K -name=Particion2 -size=300
 */
-
+var addSet, sizeSet bool
 // CommandFdisk parsea el comando fdisk y devuelve una instancia de FDISK
 func ParseFdisk(tokens []string) (string, error) {
 	cmd := &FDISK{} // Crea una nueva instancia de FDISK
-
+	sizeSet = false
+	addSet = false
 	// Unir tokens en una sola cadena y luego dividir por espacios, respetando las comillas
 	args := strings.Join(tokens, " ")
 	// Expresión regular para encontrar los parámetros del comando fdisk
-	re := regexp.MustCompile(`-size=\d+|-unit=[kKmMbB]|-fit=[bBfF]{2}|-path="[^"]+"|-path=[^\s]+|-type=[pPeElL]|-name="[^"]+"|-name=[^\s]+`)
+	re := regexp.MustCompile(`-size=\d+|-add=-?\d+|-unit=[kKmMbB]|-fit=[bBfF]{2}|-path="[^"]+"|-path=[^\s]+|-type=[pPeElL]|-name="[^"]+"|-name=[^\s]+`)
 	// Encuentra todas las coincidencias de la expresión regular en la cadena de argumentos
 	matches := re.FindAllString(args, -1)
 
 	// Itera sobre cada coincidencia encontrada
 	for _, match := range matches {
+		
 		// Divide cada parte en clave y valor usando "=" como delimitador
 		kv := strings.SplitN(match, "=", 2)
 		if len(kv) != 2 {
 			return "", fmt.Errorf("formato de parámetro inválido: %s", match)
 		}
 		key, value := strings.ToLower(kv[0]), kv[1]
-
+	
 		// Remove quotes from value if present
 		if strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"") {
 			value = strings.Trim(value, "\"")
 		}
-
-		// Switch para manejar diferentes parámetros
-		switch key {
-		case "-size":
-			// Convierte el valor del tamaño a un entero
-			size, err := strconv.Atoi(value)
-			if err != nil || size <= 0 {
-				return "", errors.New("el tamaño debe ser un número entero positivo")
+	
+		// Procesar los parámetros en el orden en que aparecen
+		if key == "-size" {
+			if !addSet { // Priorizar el primero que aparezca
+				size, err := strconv.Atoi(value)
+				if err != nil || size <= 0 {
+					return "", errors.New("el tamaño debe ser un número entero positivo")
+				}
+				cmd.size = size
+				sizeSet = true
 			}
-			cmd.size = size
-		case "-unit":
+		} else if key == "-add" {
+			if !sizeSet { // Priorizar el primero que aparezca
+				add, err := strconv.Atoi(value)
+				if err != nil {
+					return "", errors.New("el valor de -add debe ser un número entero")
+				}
+				cmd.size = add // Usamos el mismo campo `size` para almacenar el valor de `add`
+				addSet = true
+			}
+		} else if key == "-unit" {
 			// Verifica que la unidad sea "K", "M" o "B"
 			if value != "K" && value != "M" && value != "B" {
 				return "", errors.New("la unidad debe ser K, M o B")
 			}
-
 			cmd.unit = strings.ToUpper(value)
 			fmt.Printf("Unidad procesada: %s\n", cmd.unit) // Verificar la unidad
-		case "-fit":
+		} else if key == "-fit" {
 			// Verifica que el ajuste sea "BF", "FF" o "WF"
 			value = strings.ToUpper(value)
 			if value != "BF" && value != "FF" && value != "WF" {
 				return "", errors.New("el ajuste debe ser BF, FF o WF")
 			}
 			cmd.fit = value
-		case "-path":
+		} else if key == "-path" {
 			// Verifica que el path no esté vacío
 			if value == "" {
 				return "", errors.New("el path no puede estar vacío")
 			}
 			// Validar si el archivo existe
-            if _, err := os.Stat(value); os.IsNotExist(err) {
-                return "", fmt.Errorf("path no encontrado: %s", value)
-            }
+			if _, err := os.Stat(value); os.IsNotExist(err) {
+				return "", fmt.Errorf("path no encontrado: %s", value)
+			}
 			cmd.path = value
-		case "-type":
+		} else if key == "-type" {
 			// Verifica que el tipo sea "P", "E" o "L"
 			value = strings.ToUpper(value)
 			if value != "P" && value != "E" && value != "L" {
 				return "", errors.New("el tipo debe ser P, E o L")
 			}
 			cmd.typ = value
-		case "-name":
+		} else if key == "-name" {
 			// Verifica que el nombre no esté vacío
 			if value == "" {
 				return "", errors.New("el nombre no puede estar vacío")
 			}
 			cmd.name = value
-		default:
+		} else {
 			// Si el parámetro no es reconocido, devuelve un error
 			return "", fmt.Errorf("parámetro desconocido: %s", key)
 		}
 	}
 
 	// Verifica que los parámetros -size, -path y -name hayan sido proporcionados
-	if cmd.size == 0 {
-		return "", errors.New("faltan parámetros requeridos: -size")
-	}
+	// Verifica que al menos uno de los parámetros -size o -add haya sido proporcionado
 	if cmd.path == "" {
 		return "", errors.New("faltan parámetros requeridos: -path")
 	}
@@ -132,40 +141,42 @@ func ParseFdisk(tokens []string) (string, error) {
 	if cmd.typ == "" {
 		cmd.typ = "P"
 	}
+	println("booleano de addSet:", addSet)
+	if addSet {
+		return handleAddSpace(cmd) // Llama a handleAddSpace si se utilizó -add
+	}
+	println("booleano de addSet:", addSet)
+		// Deserializar el MBR para verificar las particiones
+		var mbr structures.MBR
+		err := mbr.DeserializeMBR(cmd.path)
+		if err != nil {
+			return "", fmt.Errorf("error deserializando el MBR: %v", err)
+		}
 	
-
-	// Deserializar el MBR para verificar las particiones
-    var mbr structures.MBR
-    err := mbr.DeserializeMBR(cmd.path)
-    if err != nil {
-        return "", fmt.Errorf("error deserializando el MBR: %v", err)
-    }
-
-    // Validar si ya se alcanzó el límite de particiones
-    if !mbr.HasAvailablePartition() {
-        return "", errors.New("no se pueden agregar más particiones: las 4 particiones del MBR ya están ocupadas")
-    }
-
-	// Validar que el tamaño de la partición no exceda el tamaño del disco
-	err = validatePartitionSize(cmd, &mbr)
-	if err != nil {
-		return "", err
-	}
-
-	// Crear la partición con los parámetros proporcionados
-	err = commandFdisk(cmd)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-
-	// Devuelve un mensaje de éxito con los detalles de la partición creada
-	return fmt.Sprintf("FDISK: Partición creada exitosamente\n"+
+		// Validar si ya se alcanzó el límite de particiones
+		if !mbr.HasAvailablePartition() {
+			return "", errors.New("no se pueden agregar más particiones: las 4 particiones del MBR ya están ocupadas")
+		}
+	
+		// Validar que el tamaño de la partición no exceda el tamaño del disco
+		err = validatePartitionSize(cmd, &mbr)
+		if err != nil {
+			return "", err
+		}
+		// Crear la partición con los parámetros proporcionados
+		err = commandFdisk(cmd)
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
+			// Devuelve un mensaje de éxito con los detalles de la partición creada
+		return fmt.Sprintf("FDISK: Partición creada exitosamente\n"+
 		"-> Path: %s\n"+
 		"-> Nombre: %s\n"+
 		"-> Tamaño: %d %s\n"+
 		"-> Tipo: %s\n"+
 		"-> Fit: %s",
 		cmd.path, cmd.name, cmd.size, cmd.unit, cmd.typ, cmd.fit), nil
+	
 }
 
 func validatePartitionSize(fdisk *FDISK, mbr *structures.MBR) error {
@@ -412,36 +423,68 @@ func CreateLogicalPartition(path string, size int32, fit string, name string) er
     return nil
 
 }
-/*
-func printLogicalPartitions(path string, start int32) error {
-    var ebr structures.EBR
-    offset := int64(start)
 
-    fmt.Println("\nParticiones lógicas dentro de la partición extendida:")
-	if ebr.Part_size == 0 && ebr.Part_next == -1 {
-		fmt.Println("No hay particiones lógicas creadas aún.")
-		return nil
-	}
-
-    for {
-        // Leer el EBR desde el archivo
-        err := ebr.DeserializeEBR(path, offset)
-        if err != nil {
-            return fmt.Errorf("error leyendo el EBR en offset %d: %v", offset, err)
-        }
-
-        // Imprimir la información del EBR
-        ebr.PrintEBR()
-
-        // Verificar si hay un siguiente EBR
-        if ebr.Part_next == -1 {
-            break // No hay más particiones lógicas
-        }
-
-        // Mover al siguiente EBR
-        offset = int64(ebr.Part_next)
+func handleAddSpace(fdisk *FDISK) (string, error) {
+    // Convertir el valor de `add` a bytes
+    addBytes, err := utils.ConvertToBytes(fdisk.size, fdisk.unit)
+    if err != nil {
+        return "", fmt.Errorf("error convirtiendo el tamaño: %v", err)
     }
 
-    return nil
+    // Deserializar el MBR
+    var mbr structures.MBR
+    err = mbr.DeserializeMBR(fdisk.path)
+    if err != nil {
+        return "", fmt.Errorf("error deserializando el MBR: %v", err)
+    }
+
+    // Buscar la partición por nombre
+    var partition *structures.PARTITION
+    for i := range mbr.Mbr_partitions {
+        if strings.Trim(string(mbr.Mbr_partitions[i].Part_name[:]), "\x00") == fdisk.name {
+            partition = &mbr.Mbr_partitions[i]
+            break
+        }
+    }
+    if partition == nil {
+        return "", fmt.Errorf("la partición con nombre '%s' no existe", fdisk.name)
+    }
+
+    // Validar si es posible agregar o quitar espacio
+    if addBytes > 0 {
+        // Verificar que no exceda el tamaño del disco
+        usedSpace := int32(0)
+        for _, p := range mbr.Mbr_partitions {
+            if p.Part_status[0] != 'N' {
+                usedSpace += p.Part_size
+            }
+        }
+        if usedSpace+int32(addBytes) > mbr.Mbr_size {
+            return "", fmt.Errorf("no hay suficiente espacio en el disco para agregar %d bytes", addBytes)
+        }
+        partition.Part_size += int32(addBytes)
+    }  else {
+        // Verificar que no se reduzca más allá de 1 byte
+        if partition.Part_size+int32(addBytes) < 1 {
+            maxRemovable := partition.Part_size - 1
+            return "", fmt.Errorf("no se puede reducir la partición '%s' más allá de su tamaño actual. "+
+                "El máximo espacio que puede eliminar es %d bytes", fdisk.name, maxRemovable)
+        }
+        partition.Part_size += int32(addBytes)
+    }
+
+    // Serializar el MBR actualizado
+    err = mbr.SerializeMBR(fdisk.path)
+    if err != nil {
+        return "", fmt.Errorf("error serializando el MBR: %v", err)
+    }
+
+    return fmt.Sprintf("FDISK: Espacio %s exitosamente a la partición '%s'\n"+
+        "-> Tamaño actual: %d bytes",
+        func() string {
+            if addBytes > 0 {
+                return "agregado"
+            }
+            return "reducido"
+        }(), fdisk.name, partition.Part_size), nil
 }
-*/
