@@ -252,15 +252,6 @@ func commandFdisk(fdisk *FDISK) error {
 
 	return nil
 }
-func isMBRFull(mbr *structures.MBR) bool {
-    for _, partition := range mbr.Mbr_partitions {
-        if partition.Part_status[0] != 1 { // Si hay al menos una partición inactiva
-            return false
-        }
-    }
-    return true // Todas las particiones están activas
-}
-
 
 func createPrimaryPartition(fdisk *FDISK, sizeBytes int) error {
 	// Crear una instancia de MBR
@@ -282,9 +273,6 @@ func createPrimaryPartition(fdisk *FDISK, sizeBytes int) error {
 	// Obtener la primera partición disponible
 	availablePartition, startPartition, indexPartition := mbr.GetFirstAvailablePartition()
 	
-	if availablePartition == nil {
-		return errors.New("no hay particiones disponibles")
-	}
 	
 	// Validar si el espacio es inutilizable
 	if availablePartition.Part_status[0] == 'I' {
