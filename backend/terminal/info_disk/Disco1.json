@@ -1,19 +1,9 @@
 {
   "name": "Disco1.mia",
   "size": 52428800,
-  "signature": 250286831,
+  "signature": 634720824,
   "fit": "F",
   "partitions": [
-    {
-      "status": "1",
-      "type": "P",
-      "fit": "B",
-      "start": 153,
-      "size": 1,
-      "name": "Part11\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-      "correlative": 1,
-      "id": "131A"
-    },
     {
       "status": "1",
       "type": "P",

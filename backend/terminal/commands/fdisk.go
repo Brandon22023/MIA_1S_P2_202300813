@@ -29,15 +29,17 @@ type FDISK struct {
 	fdisk -type=E -path=/home/Disco2.mia -Unit=K -name=Particion2 -size=300
 */
 var addSet, sizeSet bool
-// CommandFdisk parsea el comando fdisk y devuelve una instancia de FDISK
+
 func ParseFdisk(tokens []string) (string, error) {
 	cmd := &FDISK{} // Crea una nueva instancia de FDISK
 	sizeSet = false
 	addSet = false
+	deleteSet := false // Nueva bandera para el comando delete
+    deleteType := ""   // Variable para almacenar el tipo de eliminación (fast o full)
 	// Unir tokens en una sola cadena y luego dividir por espacios, respetando las comillas
 	args := strings.Join(tokens, " ")
 	// Expresión regular para encontrar los parámetros del comando fdisk
-	re := regexp.MustCompile(`-size=\d+|-add=-?\d+|-unit=[kKmMbB]|-fit=[bBfF]{2}|-path="[^"]+"|-path=[^\s]+|-type=[pPeElL]|-name="[^"]+"|-name=[^\s]+`)
+	re := regexp.MustCompile(`-size=\d+|-add=-?\d+|-unit=[kKmMbB]|-fit=[bBfF]{2}|-path="[^"]+"|-path=[^\s]+|-type=[pPeElL]|-name="[^"]+"|-name=[^\s]+|-delete=(fast|full)`)
 	// Encuentra todas las coincidencias de la expresión regular en la cadena de argumentos
 	matches := re.FindAllString(args, -1)
 
@@ -112,7 +114,14 @@ func ParseFdisk(tokens []string) (string, error) {
 				return "", errors.New("el nombre no puede estar vacío")
 			}
 			cmd.name = value
-		} else {
+		} else if key == "-delete" {
+            // Procesar el comando delete
+            if value != "fast" && value != "full" {
+                return "", errors.New("el valor de -delete debe ser 'fast' o 'full'")
+            }
+            deleteType = value
+            deleteSet = true
+        } else {
 			// Si el parámetro no es reconocido, devuelve un error
 			return "", fmt.Errorf("parámetro desconocido: %s", key)
 		}
@@ -146,6 +155,10 @@ func ParseFdisk(tokens []string) (string, error) {
 		return handleAddSpace(cmd) // Llama a handleAddSpace si se utilizó -add
 	}
 	println("booleano de addSet:", addSet)
+	if deleteSet {
+        return NewDeletePartition(cmd, deleteType)
+    }
+	
 		// Deserializar el MBR para verificar las particiones
 		var mbr structures.MBR
 		err := mbr.DeserializeMBR(cmd.path)
@@ -166,7 +179,7 @@ func ParseFdisk(tokens []string) (string, error) {
 		// Crear la partición con los parámetros proporcionados
 		err = commandFdisk(cmd)
 		if err != nil {
-			fmt.Println("Error:", err)
+			return "", fmt.Errorf("error: %v", err)
 		}
 			// Devuelve un mensaje de éxito con los detalles de la partición creada
 		return fmt.Sprintf("FDISK: Partición creada exitosamente\n"+
@@ -216,8 +229,7 @@ func commandFdisk(fdisk *FDISK) error {
 		// Crear partición primaria
 		err = createPrimaryPartition(fdisk, sizeBytes)
 		if err != nil {
-			fmt.Println("Error creando partición primaria:", err)
-			return err
+			return fmt.Errorf("error creando partición primaria: %v", err)
 		}
 	} else if fdisk.typ == "E" {
         fmt.Println("Creando partición extendida...")
@@ -267,11 +279,16 @@ func createPrimaryPartition(fdisk *FDISK, sizeBytes int) error {
 	fmt.Println("\nMBR original:")
 	mbr.PrintMBR()
 	
-
 	// Obtener la primera partición disponible
 	availablePartition, startPartition, indexPartition := mbr.GetFirstAvailablePartition()
+	
 	if availablePartition == nil {
-		fmt.Println("No hay particiones disponibles.")
+		return errors.New("no hay particiones disponibles")
+	}
+	
+	// Validar si el espacio es inutilizable
+	if availablePartition.Part_status[0] == 'I' {
+		return errors.New("el espacio de la partición está marcado como inutilizable y no puede ser reutilizado")
 	}
 
 	/* SOLO PARA VERIFICACIÓN */
@@ -487,4 +504,82 @@ func handleAddSpace(fdisk *FDISK) (string, error) {
             }
             return "reducido"
         }(), fdisk.name, partition.Part_size), nil
+}
+
+func NewDeletePartition(fdisk *FDISK, deleteType string) (string, error) {
+    // Deserializar el MBR
+    var mbr structures.MBR
+    err := mbr.DeserializeMBR(fdisk.path)
+    if err != nil {
+        return "", fmt.Errorf("error deserializando el MBR: %v", err)
+    }
+
+    // Buscar la partición por nombre
+    var partitionIndex int = -1
+    for i := range mbr.Mbr_partitions {
+        if strings.Trim(string(mbr.Mbr_partitions[i].Part_name[:]), "\x00") == fdisk.name {
+            partitionIndex = i
+            break
+        }
+    }
+
+    if partitionIndex == -1 {
+        return "", fmt.Errorf("la partición con nombre '%s' no existe", fdisk.name)
+    }
+
+    // Obtener la partición a eliminar
+    partition := &mbr.Mbr_partitions[partitionIndex]
+
+    if deleteType == "fast" {
+        // Eliminar la partición de la lista (marcar como disponible)
+        partition.Part_status[0] = 'N'
+        partition.Part_name = [16]byte{}
+        partition.Part_size = 0
+        partition.Part_start = -1
+        partition.Part_type = [1]byte{}
+        partition.Part_fit = [1]byte{}
+    } else if deleteType == "full" {
+		fmt.Printf("llega el full") // Depuración
+        // Sobrescribir el espacio de la partición con \0
+        file, err := os.OpenFile(fdisk.path, os.O_RDWR, 0644)
+        if err != nil {
+            return "", fmt.Errorf("error abriendo el archivo: %v", err)
+        }
+        defer file.Close()
+
+        // Sobrescribir el espacio con \0
+        zeroBuffer := make([]byte, partition.Part_size)
+        _, err = file.WriteAt(zeroBuffer, int64(partition.Part_start))
+        if err != nil {
+            return "", fmt.Errorf("error sobrescribiendo el espacio de la partición: %v", err)
+        }
+
+        // Eliminar la partición de la lista
+        partition.Part_status[0] = 'I'
+		fmt.Printf("Part_status después de asignar 'I': %c\n", partition.Part_status[0]) // Depuración
+        partition.Part_name = [16]byte{}
+        partition.Part_size = 0
+        partition.Part_start = -1
+        partition.Part_type = [1]byte{}
+        partition.Part_fit = [1]byte{}
+    } else {
+        return "", fmt.Errorf("tipo de eliminación no válido: '%s'. Use 'fast' o 'full'", deleteType)
+    }
+
+	fmt.Println("\nEstado del MBR antes de la serialización:")
+	mbr.PrintPartitions()
+	
+
+    // Serializar el MBR actualizado
+    err = mbr.SerializeMBR(fdisk.path)
+    if err != nil {
+        return "", fmt.Errorf("error serializando el MBR: %v", err)
+    }
+	fmt.Println("\nEstado actual de las particiones del MBR:")
+    mbr.PrintPartitions()
+
+	// Imprimir el estado de la partición después de la asignación
+    fmt.Printf("Estado de la partición después de eliminar (full): %+v\n", *partition)
+
+    return fmt.Sprintf("FDISK: Partición '%s' eliminada exitosamente con el método '%s'.", fdisk.name, deleteType), nil
 }
