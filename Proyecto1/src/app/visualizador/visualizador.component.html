@@ -44,7 +44,7 @@
     </div>
     
     <!-- Vista de particiones -->
-    <div class="main" *ngIf="selectedDisk">
+    <div class="main" *ngIf="selectedDisk && !selectedpart">
       <h4>Particiones del Disco: {{ selectedDisk }}</h4>
       <button class="btn btn-volver-disco" (click)="volverADiscos()">🔙 Volver a Discos</button>
       <div *ngIf="partitions.length === 0" class="no-partitions">
@@ -55,7 +55,8 @@
           class="file-item" 
           *ngFor="let partition of partitions" 
           [ngClass]="{'mounted': partition.state === 'Montada', 'not-mounted': partition.state !== 'Montada'}"
-        >
+          (click)="selectpartitions(partition)"
+          >
           <span>🖴</span>
           <p>{{ partition.name }}</p>
           <div class="partition-info">
@@ -89,6 +90,29 @@
       </div>
     </div>
 
+    <!-- Vista de carpetas -->
+    <div class="main carpetas-view" *ngIf="selectedpart">
+      <div class="ruta-bar">
+        <button class="btn btn-back" (click)="goBack()">🔙 Atrás</button>
+        <span class="ruta">{{ ruta.join(' / ') || selectedpart }}</span>
+      </div>
+      <h4>Carpetas en la partición: {{ selectedpart }}</h4>
+      <div *ngIf="getCurrentFolders().length === 0" class="no-folders">
+        <p>No existen carpetas en este nivel</p>
+      </div>
+      <div class="carpetas-grid" *ngIf="getCurrentFolders().length > 0">
+        <div
+          class="carpeta-item"
+          *ngFor="let carpeta of getCurrentFolders()"
+          (click)="openFolder(carpeta)"
+        >
+          <span>📁</span>
+          <p>{{ carpeta.path.split('/').pop() }}</p>
+        </div>
+      </div>
+    </div>
+
+    
   <div class="footer">
     <button class="btn btn-secondary" (click)="volver()">Volver</button>
   </div>

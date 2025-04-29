@@ -327,37 +327,36 @@ func (sb *SuperBlock) GetUsersBlock(path string) (*FileBlock, error) {
 }
 // CreateFolder crea una carpeta en el sistema de archivos
 func (sb *SuperBlock) CreateFolder(path string, parentsDir []string, destDir string) error {
+    // Validar el sistema de archivos
+    if sb.S_filesystem_type == 3 {
+        // Si parentsDir está vacío, trabajar con el inodo raíz "/"
+        if len(parentsDir) == 0 {
+            return sb.createFolderInInodeExt3(path, 0, parentsDir, destDir)
+        }
 
-	// Validar el sistema de archivos
-	if sb.S_filesystem_type == 3 {
-		// Si parentsDir está vacío, solo trabajar con el primer inodo que sería el raíz "/"
-		if len(parentsDir) == 0 {
-			return sb.createFolderInInodeExt3(path, 0, parentsDir, destDir)
-		}
+        // Iterar sobre los inodos para buscar el inodo padre
+        for i := int32(0); i < sb.S_inodes_count; i++ {
+            err := sb.createFolderInInodeExt3(path, i, parentsDir, destDir)
+            if err != nil {
+                return err
+            }
+        }
+    } else {
+        // Si parentsDir está vacío, trabajar con el inodo raíz "/"
+        if len(parentsDir) == 0 {
+            return sb.createFolderInInodeExt2(path, 0, parentsDir, destDir)
+        }
 
-		// Iterar sobre cada inodo ya que se necesita buscar el inodo padre
-		for i := int32(0); i < sb.S_inodes_count; i++ {
-			err := sb.createFolderInInodeExt3(path, i, parentsDir, destDir)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		// Si parentsDir está vacío, solo trabajar con el primer inodo que sería el raíz "/"
-		if len(parentsDir) == 0 {
-			return sb.createFolderInInodeExt2(path, 0, parentsDir, destDir)
-		}
+        // Iterar sobre los inodos para buscar el inodo padre
+        for i := int32(0); i < sb.S_inodes_count; i++ {
+            err := sb.createFolderInInodeExt2(path, i, parentsDir, destDir)
+            if err != nil {
+                return err
+            }
+        }
+    }
 
-		// Iterar sobre cada inodo ya que se necesita buscar el inodo padre
-		for i := int32(0); i < sb.S_inodes_count; i++ {
-			err := sb.createFolderInInodeExt2(path, i, parentsDir, destDir)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
+    return nil
 }
 // CreateFile crea un archivo en el sistema de archivos
 func (sb *SuperBlock) CreateFile(path string, parentsDir []string, destFile string, size int, cont []string) error {
@@ -620,4 +619,5 @@ func (sb *SuperBlock) GenerateTreeDot(path string, outputPath string) error {
     fmt.Println("Reporte de árbol generado:", pngFilePath)
     return nil
 }
+
 

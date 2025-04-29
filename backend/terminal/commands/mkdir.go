@@ -86,27 +86,73 @@ func ParseMkdir(tokens []string) (string, error) {
 // Aquí debería de estar logeado un usuario, por lo cual el usuario debería tener consigo el id de la partición
 
 func commandMkdir(mkdir *MKDIR) error {
-	// Obtener el id de la partición montada que está logueada
-	var partitionID string
-
-	partitionID, err := stores.GetActivePartitionID()
+    // Obtener el ID de la partición activa
+    partitionID, err := stores.GetActivePartitionID()
+    fmt.Println("ID de la partición activa:", partitionID)
     if err != nil {
-        return err
+        return fmt.Errorf("error al obtener el ID de la partición activa: %w", err)
     }
 
-	// Obtener la partición montada
-	partitionSuperblock, mountedPartition, partitionPath, err := stores.GetMountedPartitionSuperblock(partitionID)
-	if err != nil {
-		return fmt.Errorf("error al obtener la partición montada: %w", err)
-	}
+    // Verificar si hay un usuario autenticado
+    if !stores.Auth.IsAuthenticated() {
+        return fmt.Errorf("error: no hay un usuario autenticado")
+    }
 
-	// Crear el directorio
-	err = createDirectory(mkdir.path, partitionSuperblock, partitionPath, mountedPartition, mkdir.p)
-	if err != nil {
-		return fmt.Errorf("error al crear el directorio: %w", err)
-	}
+    // Obtener el usuario autenticado
+    currentUser := stores.Auth.Username
 
-	return err
+    // Obtener la partición montada
+    partitionSuperblock, mountedPartition, partitionPath, err := stores.GetMountedPartitionSuperblock(partitionID)
+    if err != nil {
+        return fmt.Errorf("error al obtener la partición montada: %w", err)
+    }
+
+    // Validar permisos de escritura en la carpeta padre
+    parentDirs, destDir := utils.GetParentDirectories(mkdir.path)
+    for _, parent := range parentDirs {
+        exists, err := partitionSuperblock.FolderExists(partitionPath, parent)
+        if err != nil {
+            return fmt.Errorf("error al verificar la existencia de la carpeta '%s': %w", parent, err)
+        }
+        if exists {
+            // Verificar permisos de escritura
+            inode, err := partitionSuperblock.FindInode(partitionPath, parentDirs, parent)
+            if err != nil {
+                return fmt.Errorf("error al obtener el inodo de la carpeta '%s': %w", parent, err)
+            }
+            if !hasWritePermission(inode, currentUser) {
+                return fmt.Errorf("error: el usuario '%s' no tiene permisos de escritura en la carpeta '%s'", currentUser, parent)
+            }
+        }
+    }
+
+	// Crear la carpeta dentro de la partición
+    err = partitionSuperblock.CreateFolder(partitionPath, parentDirs, destDir)
+    if err != nil {
+        return fmt.Errorf("error al crear la carpeta '%s': %w", mkdir.path, err)
+    }
+
+    // Serializar el superbloque para guardar los cambios
+    err = partitionSuperblock.Serialize(partitionPath, int64(mountedPartition.Part_start))
+    if err != nil {
+        return fmt.Errorf("error al serializar el superbloque: %w", err)
+    }
+
+    // Crear el directorio
+    err = createDirectory(mkdir.path, partitionSuperblock, partitionPath, mountedPartition, mkdir.p)
+    if err != nil {
+        return fmt.Errorf("error al crear el directorio: %w", err)
+    }
+
+    fmt.Printf("Directorio '%s' creado correctamente con propietario '%s'\n", mkdir.path, currentUser)
+    return nil
+}
+
+// Verificar si el usuario tiene permisos de escritura
+func hasWritePermission(inode *structures.Inode, user string) bool {
+    // Verificar permisos de escritura (bit 2 de los permisos)
+    permissions := string(inode.I_perm[:])
+    return permissions[1] == '6' || permissions[1] == '2' // Permiso de escritura
 }
 
 func createDirectory(dirPath string, sb *structures.SuperBlock, partitionPath string, mountedPartition *structures.PARTITION, allowParents bool) error {

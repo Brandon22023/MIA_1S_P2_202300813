@@ -94,3 +94,5 @@ rep -id=131C -path=/home/brandon/Calificacion_MIA/Reportes/p1_r6_mbr.jpg -name=m
 
 
 mkfs -type=full -id=131A
+
+mkdir -path="/bin"
