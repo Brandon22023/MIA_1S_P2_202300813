@@ -394,3 +394,58 @@
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7);
   background: rgba(255, 255, 255, 0.4);
 }
+
+/* Información de la carpeta */
+.carpeta-item .folder-info {
+  position: absolute;
+  bottom: -150%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  background: rgba(0, 0, 128, 0.7); /* Azul translúcido */
+  color: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 10;
+  width: 250px;
+  text-align: left;
+}
+
+.carpeta-item:hover .folder-info {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -10px);
+}
+
+.carpeta-item .folder-info h5 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #00ffff; /* Cian brillante */
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.carpeta-item .folder-info .info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.carpeta-item .folder-info .info-item span {
+  font-size: 15px;
+  margin-right: 10px;
+  color: #ffcc00; /* Amarillo brillante */
+}
+
+.carpeta-item .folder-info .info-item p {
+  font-size: 14px;
+  margin: 0;
+  color: #fff;
+}
+
+.carpeta-item .folder-info .info-item p strong {
+  color: #00ffff; /* Cian brillante */
+}

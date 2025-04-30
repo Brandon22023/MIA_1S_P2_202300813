@@ -46,7 +46,6 @@
     <!-- Vista de particiones -->
     <div class="main" *ngIf="selectedDisk && !selectedpart">
       <h4>Particiones del Disco: {{ selectedDisk }}</h4>
-      <button class="btn btn-volver-disco" (click)="volverADiscos()">🔙 Volver a Discos</button>
       <div *ngIf="partitions.length === 0" class="no-partitions">
         <p>No existen particiones para dicho disco</p>
       </div>
@@ -108,11 +107,29 @@
         >
           <span>📁</span>
           <p>{{ carpeta.path.split('/').pop() }}</p>
+    
+          <!-- Información adicional de la carpeta -->
+          <div class="folder-info">
+            <h5>💡 Información de la Carpeta</h5>
+            <div class="info-item">
+              <span>📂</span>
+              <p>Nombre: <strong>{{ carpeta.path.split('/').pop() }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>🆔</span>
+              <p>ID: <strong>{{ carpeta.id }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>🔒</span>
+              <p>Permisos: <strong>{{ carpeta.permissions }}</strong></p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+  </div>
 
-    
+  <!-- Botón "Volver" siempre visible -->
   <div class="footer">
     <button class="btn btn-secondary" (click)="volver()">Volver</button>
   </div>

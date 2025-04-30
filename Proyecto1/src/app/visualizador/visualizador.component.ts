@@ -20,7 +20,7 @@ export class VisualizadorComponent {
     state: string; 
     id: string; 
   }[] = []; // Lista de particiones
-  carpetas: { path: string; id: string }[] = [];
+  carpetas: { path: string; id: string; permissions: string }[] = [];
   currentPath: string = ''; // Ruta actual
   ruta: string[] = []; // Ruta desglosada para mostrar en la barra
   selectedDisk: string | null = null;
@@ -35,7 +35,11 @@ export class VisualizadorComponent {
   loadFolders(): void {
     this.analyzerService.getFolders().subscribe({
       next: (response) => {
-        this.carpetas = response;
+        // Agregar la propiedad "permissions" con un valor predeterminado
+        this.carpetas = response.map((folder) => ({
+          ...folder,
+          permissions: '664', // Asignar permisos predeterminados
+        }));
       },
       error: (err) => {
         console.error('Error al cargar las carpetas:', err);
@@ -56,13 +60,12 @@ export class VisualizadorComponent {
   
       // Verifica si la carpeta ya existe
       if (!this.carpetas.find((folder) => folder.path === currentPath)) {
-        this.carpetas.push({ path: currentPath, id });
+        this.carpetas.push({ path: currentPath, id, permissions: '664' });
       }
     });
   }
 
-  getCurrentFolders(): { path: string; id: string }[] {
-    // Filtra las carpetas que están en el nivel actual
+  getCurrentFolders(): { path: string; id: string; permissions: string }[] {
     const depth = this.currentPath ? this.currentPath.split('/').length : 0;
     return this.carpetas.filter((folder) => {
       const parts = folder.path.split('/');
