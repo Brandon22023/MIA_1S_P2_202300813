@@ -104,73 +104,66 @@ func ParseLogin(tokens []string) (string, error) {
 		cmd.User, cmd.Pass, cmd.ID), nil
 	
 }
-
 func CommandLogin(login *LOGIN) error {
-	// Verificar si ya hay una sesión activa
+    // Verificar si ya hay una sesión activa
     if stores.Auth.IsAuthenticated() {
         return fmt.Errorf("ya hay una sesión iniciada con el usuario: %s", stores.Auth.Username)
     }
-	// Obtener la partición montada
-	partitionSuperblock, _, partitionPath, err := stores.GetMountedPartitionSuperblock(login.ID)
-	if err != nil {
-		return fmt.Errorf("error al obtener la partición montada: %w", err)
-	}
 
-	// Obtener el bloque de usuarios
-	usersBlock, err := partitionSuperblock.GetUsersBlock(partitionPath)
-	if err != nil {
-		return fmt.Errorf("error al obtener el bloque de usuarios: %w", err)
-	}
+    // Obtener la partición montada
+    partitionSuperblock, _, partitionPath, err := stores.GetMountedPartitionSuperblock(login.ID)
+    if err != nil {
+        return fmt.Errorf("error al obtener la partición montada: %w", err)
+    }
 
-	fmt.Println(usersBlock)
+    // Obtener el bloque de usuarios
+    usersBlock, err := partitionSuperblock.GetUsersBlock(partitionPath)
+    if err != nil {
+        return fmt.Errorf("error al obtener el bloque de usuarios: %w", err)
+    }
 
-	// Convertir el contenido del bloque a string y separar por líneas
-	content := strings.Trim(string(usersBlock.B_content[:]), "\x00")
-	lines := strings.Split(content, "\n")
+    // Convertir el contenido del bloque a string y separar por líneas
+    content := strings.Trim(string(usersBlock.B_content[:]), "\x00")
+    lines := strings.Split(content, "\n")
 
-	fmt.Println(content)
+    // Variables para almacenar la información del usuario
+    var foundUser bool
+    var userPassword string
 
-	// Variables para almacenar la información del usuario
-	var foundUser bool
-	var userPassword string
+    // Buscar el usuario en las líneas
+    for _, line := range lines {
+        fields := strings.Split(line, ",")
+        for i := range fields {
+            fields[i] = strings.TrimSpace(fields[i])
+        }
 
-	// Buscar el usuario en las líneas
-	for _, line := range lines {
-		fmt.Println("Línea del bloque de usuarios:", line)
-		// Dividir la línea en campos
-		fields := strings.Split(line, ",")
-		// Limpiar espacios en blanco de cada campo
-		for i := range fields {
-			fields[i] = strings.TrimSpace(fields[i])
-		}
+        // Verificar si es una línea de usuario (tipo U)
+        if len(fields) == 5 && fields[1] == "U" {
+            if strings.EqualFold(fields[3], login.User) {
+                foundUser = true
+                userPassword = fields[4]
+                break
+            }
+        }
+    }
 
-		// Verificar si es una línea de usuario (tipo U)
-		if len(fields) == 5 && fields[1] == "U" {
-			// Comparar el nombre de usuario (campo 3)
-			if strings.EqualFold(fields[3], login.User) {
-				foundUser = true
-				userPassword = fields[4]
-				break
-			}
-		}
-	}
+    // Verificar si se encontró el usuario
+    if !foundUser {
+        return fmt.Errorf("el usuario %s no existe", login.User)
+    }
 
-	// Verificar si se encontró el usuario
-	if !foundUser {
-		
-		return fmt.Errorf("el usuario %s no existe", login.User)
-	}
+    // Verificar la contraseña
+    if !strings.EqualFold(userPassword, login.Pass) {
+        return fmt.Errorf("la contraseña no coincide")
+    }
 
-	// Verificar la contraseña
-	if !strings.EqualFold(userPassword, login.Pass) {
-		return fmt.Errorf("la contraseña no coincide")
-	}
-	fmt.Println("ID proporcionado:", login.ID)
+    // Establecer el ID activo globalmente
+    stores.ActivePartitionID = login.ID
+    fmt.Printf("ID de la partición activa: %s\n", stores.ActivePartitionID)
+    // Si la validación es exitosa, iniciar sesión
+    stores.Auth.Login(login.User, login.Pass, login.ID)
 
-	// If validation succeeds, set the auth state
-	stores.Auth.Login(login.User, login.Pass, login.ID)
-
-	return nil
+    return nil
 }
 
 func CommandLogout() (string, error) {

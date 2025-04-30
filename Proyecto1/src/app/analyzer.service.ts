@@ -40,4 +40,9 @@ export class AnalyzerService {
       })
     );
   }
+  getFolders(): Observable<{ path: string; id: string }[]> {
+    return this.http.get<{ carpetas: { path: string; id: string }[] }>('http://localhost:3000/folders').pipe(
+      map((response) => response.carpetas) // Extrae la propiedad 'carpetas' del objeto de respuesta
+    );
+  }
 }

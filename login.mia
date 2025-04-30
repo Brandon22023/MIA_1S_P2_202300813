@@ -95,4 +95,11 @@ rep -id=131C -path=/home/brandon/Calificacion_MIA/Reportes/p1_r6_mbr.jpg -name=m
 
 mkfs -type=full -id=131A
 
+login -user=root -pass=123 -id=131A
+
+login -user=root -pass=123 -id=131A
+
 mkdir -path="/bin"
+mkdir -path="/home/archivos/archivos24"
+mkdir -p -path="/home/archivos/user/docs/usac"
+mkdir -p -path="/home/archivos/carpeta1/carpeta2/carpeta3/carpeta4/carpeta5"

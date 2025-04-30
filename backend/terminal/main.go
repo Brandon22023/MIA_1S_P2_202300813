@@ -8,6 +8,7 @@ import (
 	"strings"
 	analyzer "terminal/analyzer"
 	commands "terminal/commands"
+	stores "terminal/stores"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -22,7 +23,8 @@ type CommandResponse struct {
 }
 
 func main() {
-	var paths []string // Lista para almacenar los paths de mkdir
+	var paths []string // Lista para almacenar los paths de mkdisk
+	
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{}))
@@ -352,9 +354,38 @@ func main() {
 		})
 	})
 
+	// Estructura global para almacenar paths válidos y el ID activo
+
+	app.Get("/folders", func(c *fiber.Ctx) error {
+		if stores.ActivePartitionID == "" {
+			return c.Status(400).JSON(fiber.Map{
+				"error": "No hay una partición activa",
+			})
+		}
+	
+		var response []map[string]string
+		for _, path := range stores.ValidPaths {
+			// Validar que el path no esté vacío y no contenga segmentos vacíos
+			if strings.TrimSpace(path) != "" && !strings.Contains(path, "//") {
+				response = append(response, map[string]string{
+					"path": path,
+					"id":   stores.ActivePartitionID,
+				})
+			}
+		}
+	
+		// Imprimir lo que se está enviando
+		fmt.Println("Datos enviados al frontend:", response)
+	
+		return c.JSON(fiber.Map{
+			"carpetas": response,
+		})
+	})
 
 	
 
 	app.Listen(":3000")
 }
+
+
 

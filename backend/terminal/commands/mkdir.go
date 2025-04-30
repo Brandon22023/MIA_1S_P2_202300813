@@ -24,63 +24,91 @@ type MKDIR struct {
 */
 
 func ParseMkdir(tokens []string) (string, error) {
-	cmd := &MKDIR{} // Crea una nueva instancia de MKDIR
+    cmd := &MKDIR{} // Crea una nueva instancia de MKDIR
 
-	// Unir tokens en una sola cadena y luego dividir por espacios, respetando las comillas
-	args := strings.Join(tokens, " ")
-	// Expresión regular para encontrar los parámetros del comando mkdir
-	re := regexp.MustCompile(`-path=[^\s]+|-p`)
-	// Encuentra todas las coincidencias de la expresión regular en la cadena de argumentos
-	matches := re.FindAllString(args, -1)
+    // Unir tokens en una sola cadena y luego dividir por espacios, respetando las comillas
+    args := strings.Join(tokens, " ")
+    re := regexp.MustCompile(`-path=[^\s]+|-p`)
+    matches := re.FindAllString(args, -1)
 
-	// Verificar que todos los tokens fueron reconocidos por la expresión regular
-	if len(matches) != len(tokens) {
-		// Identificar el parámetro inválido
-		for _, token := range tokens {
-			if !re.MatchString(token) {
-				return "", fmt.Errorf("parámetro inválido: %s", token)
-			}
-		}
-	}
+    if len(matches) != len(tokens) {
+        for _, token := range tokens {
+            if !re.MatchString(token) {
+                return "", fmt.Errorf("parámetro inválido: %s", token)
+            }
+        }
+    }
 
-	// Itera sobre cada coincidencia encontrada
-	for _, match := range matches {
-		// Divide cada parte en clave y valor usando "=" como delimitador
-		kv := strings.SplitN(match, "=", 2)
-		key := strings.ToLower(kv[0])
+    for _, match := range matches {
+        kv := strings.SplitN(match, "=", 2)
+        key := strings.ToLower(kv[0])
 
-		// Switch para manejar diferentes parámetros
-		switch key {
-		case "-path":
-			if len(kv) != 2 {
-				return "", fmt.Errorf("formato de parámetro inválido: %s", match)
-			}
-			value := kv[1]
-			// Remove quotes from value if present
-			if strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"") {
-				value = strings.Trim(value, "\"")
-			}
-			cmd.path = value
-		case "-p":
-			cmd.p = true
-		default:
-			// Si el parámetro no es reconocido, devuelve un error
-			return "", fmt.Errorf("parámetro desconocido: %s", key)
-		}
-	}
+        switch key {
+        case "-path":
+            if len(kv) != 2 {
+                return "", fmt.Errorf("formato de parámetro inválido: %s", match)
+            }
+            value := kv[1]
+            if strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"") {
+                value = strings.Trim(value, "\"")
+            }
+            cmd.path = value
 
-	// Verifica que el parámetro -path haya sido proporcionado
-	if cmd.path == "" {
-		return "", errors.New("faltan parámetros requeridos: -path")
-	}
+            // Validar y agregar el path
+            if cmd.path != "" {
+                segments := strings.Split(cmd.path, "/")
+                currentPath := ""
+                valid := true
 
-	// Aquí se puede agregar la lógica para ejecutar el comando mkdir con los parámetros proporcionados
-	err := commandMkdir(cmd)
-	if err != nil {
-		return "", err
-	}
+                if len(segments) == 2 && segments[1] != "" {
+                    stores.ValidPaths = append(stores.ValidPaths, cmd.path)
+                    break
+                }
 
-	return fmt.Sprintf("MKDIR: Directorio %s creado correctamente.", cmd.path), nil // Devuelve el comando MKDIR creado
+                for _, segment := range segments {
+                    if segment == "" {
+                        continue
+                    }
+                    currentPath += "/" + segment
+                    if !contains_m(stores.ValidPaths, currentPath) {
+                        valid = false
+                        break
+                    }
+                }
+
+                if valid || cmd.p {
+                    stores.ValidPaths = append(stores.ValidPaths, cmd.path)
+                } else {
+                    return "", fmt.Errorf("el path '%s' no es válido porque faltan directorios intermedios", cmd.path)
+                }
+            }
+        case "-p":
+            cmd.p = true
+        default:
+            return "", fmt.Errorf("parámetro desconocido: %s", key)
+        }
+    }
+
+    if cmd.path == "" {
+        return "", errors.New("faltan parámetros requeridos: -path")
+    }
+
+    err := commandMkdir(cmd)
+    if err != nil {
+        return "", err
+    }
+
+    return fmt.Sprintf("MKDIR: Directorio %s creado correctamente.", cmd.path), nil
+}
+
+// Función auxiliar para verificar si un path ya está en la lista
+func contains_m(paths []string, path string) bool {
+    for _, p := range paths {
+        if p == path {
+            return true
+        }
+    }
+    return false
 }
 
 // Aquí debería de estar logeado un usuario, por lo cual el usuario debería tener consigo el id de la partición
@@ -228,3 +256,4 @@ func createDirectory(dirPath string, sb *structures.SuperBlock, partitionPath st
 
 	return nil
 }
+

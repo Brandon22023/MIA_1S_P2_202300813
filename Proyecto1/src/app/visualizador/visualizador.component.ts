@@ -29,14 +29,31 @@ export class VisualizadorComponent {
 
   ngOnInit(): void {
     this.loadDisks();
+    this.loadFolders(); // Cargar carpetas desde el backend
+  }
+  
+  loadFolders(): void {
+    this.analyzerService.getFolders().subscribe({
+      next: (response) => {
+        this.carpetas = response;
+      },
+      error: (err) => {
+        console.error('Error al cargar las carpetas:', err);
+      }
+    });
   }
   createFoldersFromPath(path: string, id: string): void {
     const parts = path.split('/');
     let currentPath = '';
-
+  
     parts.forEach((part) => {
+      // Validar que el segmento no esté vacío o compuesto solo por espacios
+      if (part.trim() === '') {
+        return; // Ignorar segmentos vacíos
+      }
+  
       currentPath = currentPath ? `${currentPath}/${part}` : part;
-
+  
       // Verifica si la carpeta ya existe
       if (!this.carpetas.find((folder) => folder.path === currentPath)) {
         this.carpetas.push({ path: currentPath, id });
@@ -106,17 +123,24 @@ export class VisualizadorComponent {
     this.currentPath = ''; // Reinicia la ruta actual
     this.ruta = []; // Reinicia la barra de ruta
   
-    // Generar carpetas dinámicamente basadas en el ID de la partición
-    if (partition.id === '131A') {
-      this.createFoldersFromPath('home/user/pinqui', partition.id);
-      this.createFoldersFromPath('home/user/doc', partition.id);
-    } else if (partition.id === '132A') {
-      this.createFoldersFromPath('home/documents', partition.id);
-      this.createFoldersFromPath('home/images', partition.id);
-    } else {
-      // Si no hay contenido para la partición, limpiar carpetas
-      this.carpetas = [];
-    }
+    // Cargar carpetas desde el backend
+    this.analyzerService.getFolders().subscribe({
+      next: (response) => {
+        // Filtrar carpetas por el ID de la partición seleccionada
+        const filteredFolders = response.filter((folder) => folder.id === partition.id);
+  
+        // Procesar los paths dinámicamente
+        this.carpetas = [];
+        filteredFolders.forEach((folder) => {
+          this.createFoldersFromPath(folder.path, folder.id);
+        });
+  
+        console.log('Carpetas procesadas:', this.carpetas); // Verifica las carpetas procesadas
+      },
+      error: (err) => {
+        console.error('Error al cargar las carpetas:', err);
+      }
+    });
   }
 
   volver(): void {
