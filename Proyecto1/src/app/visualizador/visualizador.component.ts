@@ -49,6 +49,21 @@ export class VisualizadorComponent {
       }
     });
   }
+  loadTxtFiles(): void {
+    this.analyzerService.getTxtFiles().subscribe({
+      next: (response) => {
+        // Agrega la propiedad permissions con valor por defecto
+        this.txt = response.map(file => ({
+          ...file,
+          permissions: '664'
+        }));
+      },
+      error: (err) => {
+        console.error('Error al cargar los archivos txt:', err);
+      }
+    });
+  }
+  
   createFoldersFromPath(path: string, id: string): void {
     const parts = path.split('/');
     let currentPath = '';
@@ -149,10 +164,8 @@ export class VisualizadorComponent {
         console.error('Error al cargar las carpetas:', err);
       }
     });
-    this.createFileFromPath('/user.txt', partition.id, 'Contenido del archivo user.txt');
-    console.log('Archivos después de crear:', this.txt);
-    this.txt = this.txt.filter((file) => file.id === partition.id);
-    console.log('Archivos después de filtrar:', this.txt);
+    // Cargar archivos txt reales desde el backend
+    this.loadTxtFiles();
   }
 
   volver(): void {

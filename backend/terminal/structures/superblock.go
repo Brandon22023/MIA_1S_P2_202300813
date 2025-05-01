@@ -326,37 +326,45 @@ func (sb *SuperBlock) GetUsersBlock(path string) (*FileBlock, error) {
 	return nil, fmt.Errorf("users.txt block not found")
 }
 // CreateFolder crea una carpeta en el sistema de archivos
-func (sb *SuperBlock) CreateFolder(path string, parentsDir []string, destDir string) error {
-    // Validar el sistema de archivos
-    if sb.S_filesystem_type == 3 {
-        // Si parentsDir está vacío, trabajar con el inodo raíz "/"
-        if len(parentsDir) == 0 {
-            return sb.createFolderInInodeExt3(path, 0, parentsDir, destDir)
-        }
-
-        // Iterar sobre los inodos para buscar el inodo padre
-        for i := int32(0); i < sb.S_inodes_count; i++ {
-            err := sb.createFolderInInodeExt3(path, i, parentsDir, destDir)
+func (sb *SuperBlock) CreateFolder(path string, parentsDir []string, destDir string, partStart int64) error {
+    if len(parentsDir) > 0 {
+        exists, _ := sb.FolderExists(path, strings.Join(parentsDir, "/"))
+        if !exists {
+            err := sb.CreateFolder(path, parentsDir[:len(parentsDir)-1], parentsDir[len(parentsDir)-1], partStart)
             if err != nil {
                 return err
             }
-        }
-    } else {
-        // Si parentsDir está vacío, trabajar con el inodo raíz "/"
-        if len(parentsDir) == 0 {
-            return sb.createFolderInInodeExt2(path, 0, parentsDir, destDir)
-        }
-
-        // Iterar sobre los inodos para buscar el inodo padre
-        for i := int32(0); i < sb.S_inodes_count; i++ {
-            err := sb.createFolderInInodeExt2(path, i, parentsDir, destDir)
+            err = sb.Serialize(path, partStart)
             if err != nil {
-                return err
+                return fmt.Errorf("error al serializar el superbloque: %w", err)
+            }
+            err = sb.Deserialize(path, partStart)
+            if err != nil {
+                return fmt.Errorf("error al recargar el superbloque: %w", err)
             }
         }
+        // Busca el inodo padre correcto
+        inode, err := sb.FindInode(path, parentsDir, parentsDir[len(parentsDir)-1])
+        if err != nil {
+            return fmt.Errorf("no se encontró el inodo padre: %w", err)
+        }
+        // Busca el índice del inodo padre
+        parentIndex := int32(-1)
+        for i := int32(0); i < sb.S_inodes_count; i++ {
+            temp := &Inode{}
+            _ = temp.Deserialize(path, int64(sb.S_inode_start+(i*sb.S_inode_size)))
+            if temp.I_uid == inode.I_uid && temp.I_gid == inode.I_gid && temp.I_ctime == inode.I_ctime {
+                parentIndex = i
+                break
+            }
+        }
+        if parentIndex == -1 {
+            return fmt.Errorf("no se pudo determinar el índice del inodo padre")
+        }
+        return sb.createFolderInInodeExt2(path, parentIndex, []string{}, destDir)
     }
-
-    return nil
+    // Si no hay padres, crear en raíz
+    return sb.createFolderInInodeExt2(path, 0, parentsDir, destDir)
 }
 // CreateFile crea un archivo en el sistema de archivos
 func (sb *SuperBlock) CreateFile(path string, parentsDir []string, destFile string, size int, cont []string) error {

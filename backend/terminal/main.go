@@ -9,6 +9,7 @@ import (
 	analyzer "terminal/analyzer"
 	commands "terminal/commands"
 	stores "terminal/stores"
+	//structures "terminal/structures"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -22,7 +23,11 @@ type CommandResponse struct {
 	Output string `json:"output"`
 }
 
+
+
+
 func main() {
+	fmt.Println("Servidor Fiber iniciado en http://localhost:3000")
 	var paths []string // Lista para almacenar los paths de mkdisk
 	
 	app := fiber.New()
@@ -109,6 +114,21 @@ func main() {
 				output += fmt.Sprintf("\nInformación del disco exportada exitosamente para el disco en %s", diskPath)
 			}
 		}
+		fmt.Println("aqui se extrae el txt")
+
+		// Obtener el id de la partición montada activa
+		partitionID, err := stores.GetActivePartitionID()
+		if err == nil {
+			// Obtener superbloque, partición montada y path real
+			sb, _, partitionPath, err := stores.GetMountedPartitionSuperblock(partitionID)
+			if err == nil {
+				// Extraer los archivos .txt y su contenido
+				sb.ExtractTxtFiles(partitionPath)
+			}
+		}
+
+		fmt.Println("aqui se termina la extraccion")
+		
 
 		return c.JSON(CommandResponse{
 			Output: output,
@@ -382,10 +402,35 @@ func main() {
 		})
 	})
 
+	app.Get("/txtfiles", func(c *fiber.Ctx) error {
+		if stores.ActivePartitionID == "" {
+			return c.Status(400).JSON(fiber.Map{
+				"error": "No hay una partición activa",
+			})
+		}
+		partitionID := stores.ActivePartitionID
+		sb, _, partitionPath, err := stores.GetMountedPartitionSuperblock(partitionID)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{
+				"error": "No se pudo obtener el superbloque",
+			})
+		}
+		txtFiles, err := sb.GetTxtFiles(partitionPath, partitionID)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{
+				"error": "No se pudieron extraer los archivos .txt",
+			})
+		}
+		return c.JSON(fiber.Map{
+			"txtfiles": txtFiles,
+		})
+	})
+
 	
 
 	app.Listen(":3000")
 }
+
 
 
 

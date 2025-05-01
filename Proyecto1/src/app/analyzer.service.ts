@@ -45,4 +45,9 @@ export class AnalyzerService {
       map((response) => response.carpetas) // Extrae la propiedad 'carpetas' del objeto de respuesta
     );
   }
+  getTxtFiles(): Observable<{ path: string; id: string; contenido: string }[]> {
+    return this.http.get<{ txtfiles: { path: string; id: string; contenido: string }[] }>('http://localhost:3000/txtfiles').pipe(
+      map((response) => response.txtfiles)
+    );
+  }
 }
