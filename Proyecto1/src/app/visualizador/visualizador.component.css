@@ -449,3 +449,176 @@
 .carpeta-item .folder-info .info-item p strong {
   color: #00ffff; /* Cian brillante */
 }
+/* Estilo para la cuadrícula de archivos */
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+}
+
+/* Estilo para cada archivo */
+.file-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+  cursor: pointer;
+}
+
+.file-item:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Estilo para el ícono del archivo */
+.file-item span {
+  font-size: 36px;
+  margin-bottom: 10px;
+  color: #00ffff; /* Cian brillante */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+/* Estilo para el nombre del archivo */
+.file-item p {
+  font-size: 16px;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* Estilo para mostrar el contenido del archivo seleccionado */
+.file-content {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  color: #fff;
+  font-family: monospace;
+  white-space: pre-wrap;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Dos columnas: una para carpetas y otra para archivos */
+  gap: 20px; /* Espaciado entre columnas */
+}
+
+.carpetas-grid,
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+}
+
+
+@media (max-width: 768px) {
+  .content-grid {
+    grid-template-columns: 1fr; /* Una sola columna en pantallas pequeñas */
+  }
+
+  .carpetas-grid,
+  .files-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}
+
+/* Block de notas estilo Windows */
+.modal-content-nota {
+  background: #f5f5f5;
+  border: 2px solid #bdbdbd;
+  border-radius: 4px;
+  min-width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  font-family: 'Consolas', 'Courier New', monospace;
+}
+
+.notepad-title-bar {
+  background: linear-gradient(90deg, #2171b7 80%, #1b4f72 100%);
+  color: #fff;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #bdbdbd;
+  border-radius: 4px 4px 0 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.notepad-title {
+  font-weight: bold;
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.notepad-close {
+  background: #e81123;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-left: 10px;
+}
+.notepad-close:hover {
+  background: #c50f1f;
+}
+
+.notepad-toolbar {
+  background: #ededed;
+  border-bottom: 1px solid #bdbdbd;
+  padding: 4px 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.notepad-toolbar button {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 14px;
+  padding: 2px 10px;
+  border-radius: 2px;
+  cursor: not-allowed;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.notepad-area {
+  background: #fff;
+  color: #222;
+  padding: 18px;
+  min-height: 220px;
+  font-size: 16px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  border-radius: 0 0 4px 4px;
+  white-space: pre-wrap;
+  outline: none;
+  margin: 0;
+  overflow-x: auto;
+}
+
+/* Centrar el modal tipo block de notas */
+.modal-nota {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}

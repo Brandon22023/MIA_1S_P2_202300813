@@ -20,16 +20,19 @@ export class VisualizadorComponent {
     state: string; 
     id: string; 
   }[] = []; // Lista de particiones
-  carpetas: { path: string; id: string; permissions: string }[] = [];
+  carpetas: { path: string; id: string; permissions: string; }[] = [];
+  txt: { path: string; id: string; permissions: string; contenido: string }[] = [];
   currentPath: string = ''; // Ruta actual
   ruta: string[] = []; // Ruta desglosada para mostrar en la barra
   selectedDisk: string | null = null;
   selectedpart: string | null = null;
+  selectedFileContent: string | null = null; // Contenido del archivo seleccionado
   constructor(private analyzerService: AnalyzerService) {}
-
+  selectedpartId: string | null = null;
   ngOnInit(): void {
     this.loadDisks();
     this.loadFolders(); // Cargar carpetas desde el backend
+    // Archivo .txt quemado para pruebas
   }
   
   loadFolders(): void {
@@ -123,6 +126,8 @@ export class VisualizadorComponent {
   }
   selectpartitions(partition: { name: string; id: string }): void {
     this.selectedpart = partition.name; // Almacena el nombre de la partición seleccionada
+    this.selectedpartId = partition.id
+    console.log('Partición seleccionada:', this.selectedpart);
     this.currentPath = ''; // Reinicia la ruta actual
     this.ruta = []; // Reinicia la barra de ruta
   
@@ -144,6 +149,10 @@ export class VisualizadorComponent {
         console.error('Error al cargar las carpetas:', err);
       }
     });
+    this.createFileFromPath('/user.txt', partition.id, 'Contenido del archivo user.txt');
+    console.log('Archivos después de crear:', this.txt);
+    this.txt = this.txt.filter((file) => file.id === partition.id);
+    console.log('Archivos después de filtrar:', this.txt);
   }
 
   volver(): void {
@@ -159,4 +168,62 @@ export class VisualizadorComponent {
     this.selectedpart = null; // Limpia la partición seleccionada
     this.carpetas = []; // Limpia las carpetas
   }
+  showNotaModal = false;
+  //para los archivos.txt
+  selectFile(file: { path: string; contenido: string }): void {
+    this.selectedFileContent = file.contenido;
+    this.showNotaModal = true;
+  }
+  closeNotaModal(): void {
+    this.showNotaModal = false;
+  }
+
+  createFileFromPath(path: string, id: string, contenido: string): void {
+    // Buscar si ya existe el archivo con ese path e id
+    const existingFile = this.txt.find(file => file.path === path && file.id === id);
+    if (existingFile) {
+      // Si existe, solo actualiza el contenido
+      existingFile.contenido = contenido;
+      console.log(`Archivo ${path} reescrito en partición ${id}`);
+      return;
+    }
+    // Si no existe, lo crea normalmente
+    const parts = path.split('/');
+    const fileName = parts.pop();
+    let currentPath = '';
+    parts.forEach((part) => {
+      if (part.trim() === '') return;
+      currentPath = currentPath ? `${currentPath}/${part}` : part;
+      if (!this.carpetas.find((folder) => folder.path === currentPath)) {
+        this.carpetas.push({ path: currentPath, id, permissions: '664' });
+      }
+    });
+    if (fileName) {
+      this.txt.push({
+        path: currentPath ? `${currentPath}/${fileName}` : `/${fileName}`,
+        id,
+        permissions: '664',
+        contenido,
+      });
+      console.log(`Archivo creado: ${fileName} en ${currentPath || 'raíz'}`);
+    } else {
+      console.error('El nombre del archivo no es válido.');
+    }
+  }
+  get filteredTxt(): { path: string; id: string; permissions: string; contenido: string }[] {
+    const prefix = this.currentPath ? this.currentPath + '/' : '';
+    const depth = this.currentPath ? this.currentPath.split('/').length : 0;
+    const result = this.txt.filter((file) => {
+      if (file.id !== this.selectedpartId) return false; // <--- Cambia aquí
+      const fileParts = file.path.split('/');
+      if (this.currentPath) {
+        return file.path.startsWith(prefix) && fileParts.length === depth + 1;
+      } else {
+        return fileParts.length === 2 && fileParts[0] === '';
+      }
+    });
+    console.log('Archivos visibles en este nivel:', result);
+    return result;
+  }
+  
 }

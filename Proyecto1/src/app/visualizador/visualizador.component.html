@@ -45,6 +45,7 @@
     
     <!-- Vista de particiones -->
     <div class="main" *ngIf="selectedDisk && !selectedpart">
+      <button class="btn-volver-disco" (click)="volverADiscos()">🔙 Volver a Discos</button>
       <h4>Particiones del Disco: {{ selectedDisk }}</h4>
       <div *ngIf="partitions.length === 0" class="no-partitions">
         <p>No existen particiones para dicho disco</p>
@@ -89,17 +90,18 @@
       </div>
     </div>
 
-    <!-- Vista de carpetas -->
+    <!-- Vista de carpetas y archivos -->
     <div class="main carpetas-view" *ngIf="selectedpart">
       <div class="ruta-bar">
         <button class="btn btn-back" (click)="goBack()">🔙 Atrás</button>
         <span class="ruta">{{ ruta.join(' / ') || selectedpart }}</span>
       </div>
-      <h4>Carpetas en la partición: {{ selectedpart }}</h4>
-      <div *ngIf="getCurrentFolders().length === 0" class="no-folders">
-        <p>No existen carpetas en este nivel</p>
+      <h4>Contenido en la partición: {{ selectedpart }}</h4>
+      <div *ngIf="getCurrentFolders().length === 0 && filteredTxt.length === 0" class="no-content">
+        <p>No existen carpetas ni archivos en este nivel</p>
       </div>
-      <div class="carpetas-grid" *ngIf="getCurrentFolders().length > 0">
+      <div class="content-grid">
+        <!-- Carpetas -->
         <div
           class="carpeta-item"
           *ngFor="let carpeta of getCurrentFolders()"
@@ -107,8 +109,6 @@
         >
           <span>📁</span>
           <p>{{ carpeta.path.split('/').pop() }}</p>
-    
-          <!-- Información adicional de la carpeta -->
           <div class="folder-info">
             <h5>💡 Información de la Carpeta</h5>
             <div class="info-item">
@@ -125,12 +125,43 @@
             </div>
           </div>
         </div>
+
+        <!-- Archivos -->
+        <div
+          class="file-item"
+          *ngFor="let file of filteredTxt"
+          (click)="selectFile(file)"
+        >
+          <span>📄</span>
+          <p>{{ file.path.split('/').pop() }}</p>
+        </div>
       </div>
+
+      <!-- Mostrar contenido del archivo seleccionado -->
     </div>
   </div>
 
-  <!-- Botón "Volver" siempre visible -->
+  <!-- Modal tipo block de notas -->
+  <div class="modal-nota" *ngIf="showNotaModal" (click)="closeNotaModal()">
+    <div class="modal-content-nota" (click)="$event.stopPropagation()">
+      <div class="notepad-title-bar">
+        <span class="notepad-title">Block de notas - {{ selectedFileContent ? 'user.txt' : '' }}</span>
+        <button class="notepad-close" (click)="closeNotaModal()">✖</button>
+      </div>
+      <div class="notepad-toolbar">
+        <button disabled>Archivo</button>
+        <button disabled>Edición</button>
+        <button disabled>Formato</button>
+        <button disabled>Ver</button>
+        <button disabled>Ayuda</button>
+      </div>
+      <pre class="notepad-area">{{ selectedFileContent }}</pre>
+    </div>
+  </div>
+
   <div class="footer">
     <button class="btn btn-secondary" (click)="volver()">Volver</button>
   </div>
+
 </div>
+
