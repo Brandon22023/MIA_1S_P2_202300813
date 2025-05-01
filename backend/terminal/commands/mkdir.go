@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-
-
+	"os"
+	"path/filepath"
 )
 
 // MKDIR estructura que representa el comando mkdir con sus parámetros
@@ -95,7 +95,6 @@ func ParseMkdir(tokens []string) (string, error) {
 
     err := commandMkdir(cmd)
     if err != nil {
-        fmt.Printf("[ERROR] %v\n", err)
         return "", err
     }
 
@@ -138,26 +137,25 @@ func commandMkdir(mkdir *MKDIR) error {
 
     // Validar permisos de escritura en la carpeta padre
     parentDirs, destDir := utils.GetParentDirectories(mkdir.path)
-    // Solo valida permisos sobre el padre inmediato si existe
-    if len(parentDirs) > 0 {
-        parentPath := "/" + strings.Join(parentDirs, "/")
-        exists, err := partitionSuperblock.FolderExists(partitionPath, parentPath)
+    for _, parent := range parentDirs {
+        exists, err := partitionSuperblock.FolderExists(partitionPath, parent)
         if err != nil {
-            return fmt.Errorf("error al verificar la existencia de la carpeta '%s': %w", parentPath, err)
+            return fmt.Errorf("error al verificar la existencia de la carpeta '%s': %w", parent, err)
         }
         if exists {
-            inode, err := partitionSuperblock.FindInode(partitionPath, parentDirs[:len(parentDirs)-1], parentDirs[len(parentDirs)-1])
+            // Verificar permisos de escritura
+            inode, err := partitionSuperblock.FindInode(partitionPath, parentDirs, parent)
             if err != nil {
-                return fmt.Errorf("error al obtener el inodo de la carpeta '%s': %w", parentPath, err)
+                return fmt.Errorf("error al obtener el inodo de la carpeta '%s': %w", parent, err)
             }
             if !hasWritePermission(inode, currentUser) {
-                return fmt.Errorf("error: el usuario '%s' no tiene permisos de escritura en la carpeta '%s'", currentUser, parentPath)
+                return fmt.Errorf("error: el usuario '%s' no tiene permisos de escritura en la carpeta '%s'", currentUser, parent)
             }
         }
     }
 
-    // Crear la carpeta dentro de la partición (esto ya es recursivo)
-    err = partitionSuperblock.CreateFolder(partitionPath, parentDirs, destDir, int64(mountedPartition.Part_start))
+	// Crear la carpeta dentro de la partición
+    err = partitionSuperblock.CreateFolder(partitionPath, parentDirs, destDir)
     if err != nil {
         return fmt.Errorf("error al crear la carpeta '%s': %w", mkdir.path, err)
     }
@@ -168,9 +166,11 @@ func commandMkdir(mkdir *MKDIR) error {
         return fmt.Errorf("error al serializar el superbloque: %w", err)
     }
 
-    // Imprimir inodos y bloques (opcional)
-    partitionSuperblock.PrintInodes(partitionPath)
-    partitionSuperblock.PrintBlocks(partitionPath)
+    // Crear el directorio
+    err = createDirectory(mkdir.path, partitionSuperblock, partitionPath, mountedPartition, mkdir.p)
+    if err != nil {
+        return fmt.Errorf("error al crear el directorio: %w", err)
+    }
 
     fmt.Printf("Directorio '%s' creado correctamente con propietario '%s'\n", mkdir.path, currentUser)
     return nil
@@ -184,28 +184,75 @@ func hasWritePermission(inode *structures.Inode, user string) bool {
 }
 
 func createDirectory(dirPath string, sb *structures.SuperBlock, partitionPath string, mountedPartition *structures.PARTITION, allowParents bool) error {
-    fmt.Println("\nCreando directorio:", dirPath)
+	fmt.Println("\nCreando directorio:", dirPath)
 
-    parentDirs, destDir := utils.GetParentDirectories(dirPath)
-    fmt.Println("\nDirectorios padres:", parentDirs)
-    fmt.Println("Directorio destino:", destDir)
+	parentDirs, destDir := utils.GetParentDirectories(dirPath)
+	fmt.Println("\nDirectorios padres:", parentDirs)
+	fmt.Println("Directorio destino:", destDir)
 
-    // Solo llama a CreateFolder, que ya es recursiva
-    //err := sb.CreateFolder(partitionPath, parentDirs, destDir)
-    /*if err != nil {
-        return fmt.Errorf("error al crear el directorio: %w", err)
-    }*/
+	// Si el dirPath es "/", requerir permisos de superusuario
+	if dirPath == "/" {
+		if os.Geteuid() != 0 {
+			return fmt.Errorf("error: se requieren permisos de superusuario para crear el directorio raíz")
+		}
+	}
 
-    // Imprimir inodos y bloques
-    sb.PrintInodes(partitionPath)
-    sb.PrintBlocks(partitionPath)
+	physicalBasePath := dirPath
 
-    // Serializar el superbloque
-    err := sb.Serialize(partitionPath, int64(mountedPartition.Part_start))
-    if err != nil {
-        return fmt.Errorf("error al serializar el superbloque: %w", err)
+	// Validar si las carpetas padres existen
+    for _, parent := range parentDirs {
+        exists, err := sb.FolderExists(partitionPath, parent)
+		fmt.Printf("Verificando existencia de la carpeta: %s\n", parent)
+        if err != nil {
+            return fmt.Errorf("error al verificar la existencia de la carpeta '%s': %w", parent, err)
+        }
+        if !exists {
+            if !allowParents {
+                return fmt.Errorf("error: no existen las carpetas padres para el directorio '%s'", dirPath)
+            }
+            // Crear las carpetas padres si la opción -p está habilitada
+			fmt.Printf("Creando carpeta padre: %s\n", parent)
+			err = sb.CreateFolder(partitionPath, parentDirs, parent)
+			if err != nil {
+				return fmt.Errorf("error al crear la carpeta padre '%s': %w", parent, err)
+			}
+
+			// Crear físicamente la carpeta en el sistema operativo dentro de la ruta definida
+			physicalPath := filepath.Join(physicalBasePath, parent)
+			err = os.MkdirAll(physicalPath, 0755)
+			if err != nil {
+				return fmt.Errorf("error al crear físicamente la carpeta '%s': %w", physicalPath, err)
+			}
+			fmt.Printf("Carpeta creada físicamente: %s\n", physicalPath)
+		}
     }
 
-    return nil
-}
+	// Crear físicamente el directorio destino dentro de la ruta definida
+	fullPath := filepath.Join(physicalBasePath, filepath.Join(filepath.Join(parentDirs...), destDir))
+	fullPath = filepath.Clean(fullPath)
+	err := os.MkdirAll(fullPath, 0755)
+	if err != nil {
+		return fmt.Errorf("error al crear físicamente el directorio '%s': %w", fullPath, err)
+	}
+	fmt.Printf("Directorio creado físicamente: %s\n", fullPath)
 
+	// Crear el directorio segun el path proporcionado
+	err = sb.CreateFolder(partitionPath, parentDirs, destDir)
+	if err != nil {
+		return fmt.Errorf("error al crear el directorio: %w", err)
+	}
+
+	
+
+	// Imprimir inodos y bloques
+	sb.PrintInodes(partitionPath)
+	sb.PrintBlocks(partitionPath)
+
+	// Serializar el superbloque
+	err = sb.Serialize(partitionPath, int64(mountedPartition.Part_start))
+	if err != nil {
+		return fmt.Errorf("error al serializar el superbloque: %w", err)
+	}
+
+	return nil
+}
