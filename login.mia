@@ -103,3 +103,7 @@ mkdir -path="/bin"
 mkdir -path="/home/archivos/archivos24"
 mkdir -p -path="/home/archivos/user/docs/usac"
 mkdir -p -path="/home/archivos/carpeta1/carpeta2/carpeta3/carpeta4/carpeta5"
+
+
+mkfile -path=/home/archivos/user/docs/Tarea.txt -size=75
+mkfile -path=/home/archivos/user/docs/Tarea2.txt -size=768

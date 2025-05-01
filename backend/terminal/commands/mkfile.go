@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"os"
-	"path/filepath"
 	stores "terminal/stores"
 	structures "terminal/structures"
 	utils "terminal/utils"
@@ -152,90 +151,64 @@ func generateContent(size int) string {
 }
 
 // Funcion para crear un archivo
+// ...existing code...
 func createFile(filePath string, size int, content string, sb *structures.SuperBlock, partitionPath string, mountedPartition *structures.PARTITION, recursive bool) error {
-	fmt.Println("\nCreando archivo:", filePath)
+    fmt.Println("\nCreando archivo:", filePath)
 
-	parentDirs, destDir := utils.GetParentDirectories(filePath)
-	fmt.Println("\nDirectorios padres:", parentDirs)
-	fmt.Println("Directorio destino:", destDir)
+    parentDirs, destDir := utils.GetParentDirectories(filePath)
+    fmt.Println("\nDirectorios padres:", parentDirs)
+    fmt.Println("Directorio destino:", destDir)
 
-	// Validar si el parámetro `content` es un path a un archivo
+    // Si es recursivo, crear las carpetas padres si no existen
+    if recursive {
+        for i := range parentDirs {
+            subParents := parentDirs[:i]
+            current := parentDirs[i]
+            exists, _ := sb.FolderExists(partitionPath, strings.Join(append(subParents, current), "/"))
+            if !exists {
+                fmt.Printf("Creando carpeta padre: %s\n", current)
+                err := sb.CreateFolder(partitionPath, subParents, current)
+                if err != nil {
+                    return fmt.Errorf("error al crear la carpeta padre '%s': %w", current, err)
+                }
+            }
+        }
+    }
+
+    // Validar si el parámetro `content` es un path a un archivo
     if content != "" {
         if _, err := os.Stat(content); err == nil {
-            // Leer el contenido del archivo especificado en `content`
             fileData, err := os.ReadFile(content)
             if err != nil {
                 return fmt.Errorf("error al leer el archivo '%s': %w", content, err)
             }
-            content = string(fileData) // Usar el contenido del archivo como contenido
+            content = string(fileData)
             fmt.Printf("Contenido leído del archivo '%s':\n%s\n", content, fileData)
         } else {
             fmt.Printf("El parámetro `content` no es un path válido, se usará como contenido directo.\n")
         }
     }
 
-	// Verificar si el directorio base existe físicamente
-    baseDir := filepath.Dir(filePath) // Obtiene el directorio base del filePath
-    if _, err := os.Stat(baseDir); os.IsNotExist(err) {
-        if recursive {
-            // Crear los directorios faltantes si la opción -r está habilitada
-            fmt.Printf("Creando directorios faltantes: %s\n", baseDir)
-            err := os.MkdirAll(baseDir, 0755)
-            if err != nil {
-                return fmt.Errorf("error al crear los directorios faltantes '%s': %w", baseDir, err)
-            }
-            fmt.Printf("Directorios creados: %s\n", baseDir)
-        } else {
-            return fmt.Errorf("error: el directorio base '%s' no existe", baseDir)
-        }
-    } else {
-        fmt.Printf("Directorio base verificado: %s\n", baseDir)
-    }
-
-	// Si el contenido proviene de un archivo, reemplazar los chunks con el contenido leído
     var chunks []string
     if content != "" {
-        chunks = []string{content} // Usar el contenido leído como un único chunk
+        chunks = []string{content}
     } else {
-        // Obtener contenido por chunks si no se proporcionó un archivo en `-cont`
         chunks = utils.SplitStringIntoChunks(generateContent(size))
     }
     fmt.Println("\nChunks del contenido:", chunks)
 
-    // Crear el archivo físicamente en el sistema operativo
-    file, err := os.Create(filePath) // Crea el archivo en la ruta especificada
+    err := sb.CreateFile(partitionPath, parentDirs, destDir, size, chunks)
     if err != nil {
-        return fmt.Errorf("error al crear el archivo físicamente: %w", err)
+        return fmt.Errorf("error al crear el archivo: %w", err)
     }
-    defer file.Close()
 
-    // Escribir los chunks en el archivo
-    for _, chunk := range chunks {
-        _, err := file.WriteString(chunk)
-        if err != nil {
-            return fmt.Errorf("error al escribir en el archivo: %w", err)
-        }
+    sb.PrintInodes(partitionPath)
+    sb.PrintBlocks(partitionPath)
+
+    err = sb.Serialize(partitionPath, int64(mountedPartition.Part_start))
+    if err != nil {
+        return fmt.Errorf("error al serializar el superbloque: %w", err)
     }
-    fmt.Printf("Archivo '%s' creado físicamente con contenido.\n", filePath)
 
-
-
-	// Crear el archivo
-	err = sb.CreateFile(partitionPath, parentDirs, destDir, size, chunks)
-	if err != nil {
-		return fmt.Errorf("error al crear el archivo: %w", err)
-	}
-
-	// Imprimir inodos y bloques
-	sb.PrintInodes(partitionPath)
-	sb.PrintBlocks(partitionPath)
-
-	// Serializar el superbloque
-	err = sb.Serialize(partitionPath, int64(mountedPartition.Part_start))
-	if err != nil {
-		return fmt.Errorf("error al serializar el superbloque: %w", err)
-	}
-
-	return nil
+    return nil
 }
-

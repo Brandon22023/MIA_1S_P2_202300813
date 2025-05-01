@@ -379,21 +379,75 @@ func inodeIndexFromInode(sb *SuperBlock, path string, inode *Inode) int32 {
 }
 // CreateFile crea un archivo en el sistema de archivos
 func (sb *SuperBlock) CreateFile(path string, parentsDir []string, destFile string, size int, cont []string) error {
+    // 1. Buscar el inodo de la carpeta destino
+    var parentInodeIndex int32 = 0 // raíz
+    if len(parentsDir) > 0 {
+        inode, err := sb.FindInode(path, parentsDir[:len(parentsDir)-1], parentsDir[len(parentsDir)-1])
+        if err != nil {
+            return fmt.Errorf("carpeta destino no encontrada: %w", err)
+        }
+        parentInodeIndex = inodeIndexFromInode(sb, path, inode)
+    }
 
-	// Si parentsDir está vacío, solo trabajar con el primer inodo que sería el raíz "/"
-	if len(parentsDir) == 0 {
-		return sb.createFileInInode(path, 0, parentsDir, destFile, size, cont)
-	}
+    // 2. Buscar espacio en los FolderBlock de la carpeta destino
+    parentInode := &Inode{}
+    err := parentInode.Deserialize(path, int64(sb.S_inode_start+(parentInodeIndex*sb.S_inode_size)))
+    if err != nil {
+        return err
+    }
+    for _, blockIndex := range parentInode.I_block {
+        if blockIndex == -1 {
+            break
+        }
+        block := &FolderBlock{}
+        err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+        if err != nil {
+            continue
+        }
+        for k := 2; k < 4; k++ {
+            if block.B_content[k].B_inodo == -1 {
+                // 3. Crear el inodo y bloques del archivo
+                newInodeIndex := sb.S_inodes_count
+                fileInode := &Inode{
+                    I_uid:   1,
+                    I_gid:   1,
+                    I_size:  int32(size),
+                    I_atime: float32(time.Now().Unix()),
+                    I_ctime: float32(time.Now().Unix()),
+                    I_mtime: float32(time.Now().Unix()),
+                    I_block: [15]int32{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+                    I_type:  [1]byte{'1'},
+                    I_perm:  [3]byte{'6', '6', '4'},
+                }
+                // Crear bloques de datos y enlazarlos en fileInode.I_block
+                for i, chunk := range cont {
+                    blockIdx := sb.S_blocks_count
+                    fileBlock := &FileBlock{}
+                    copy(fileBlock.B_content[:], chunk)
+                    fileBlock.Serialize(path, int64(sb.S_first_blo))
+                    fileInode.I_block[i] = blockIdx
+                    sb.S_blocks_count++
+                    sb.S_free_blocks_count--
+                    sb.S_first_blo += sb.S_block_size
+                    sb.UpdateBitmapBlock(path)
+                }
+                // Serializar el inodo del archivo
+                fileInode.Serialize(path, int64(sb.S_first_ino))
+                sb.UpdateBitmapInode(path)
+                sb.S_inodes_count++
+                sb.S_free_inodes_count--
+                sb.S_first_ino += sb.S_inode_size
 
-	// Iterar sobre cada inodo ya que se necesita buscar el inodo padre
-	for i := int32(0); i < sb.S_inodes_count; i++ {
-		err := sb.createFileInInode(path, i, parentsDir, destFile, size, cont)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+                // 4. Enlazar el archivo en el bloque de la carpeta
+                copy(block.B_content[k].B_name[:], destFile)
+                block.B_content[k].B_inodo = newInodeIndex
+                block.Serialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+                parentInode.Serialize(path, int64(sb.S_inode_start+(parentInodeIndex*sb.S_inode_size)))
+                return nil
+            }
+        }
+    }
+    return fmt.Errorf("no hay espacio en la carpeta destino")
 }
 
 func (sb *SuperBlock) FolderExists(partitionPath string, folderPath string) (bool, error) {
@@ -421,26 +475,24 @@ func (sb *SuperBlock) FindInode(partitionPath string, parentDirs []string, destD
         return nil, fmt.Errorf("error al deserializar el inodo raíz: %w", err)
     }
 
-    // Recorrer los directorios padres
+    // Recorrer los directorios padres uno a uno, avanzando inodo por inodo
     for _, dir := range parentDirs {
         found := false
+        fmt.Printf("Buscando carpeta '%s' en inodo actual\n", dir)
         for _, blockIndex := range currentInode.I_block {
             if blockIndex == -1 {
-                break
+                continue
             }
-
-            // Leer el bloque de carpeta
             folderBlock := &FolderBlock{}
             err := folderBlock.Deserialize(partitionPath, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
             if err != nil {
-                return nil, fmt.Errorf("error al deserializar el bloque de carpeta: %w", err)
+                continue
             }
-
-            // Buscar el directorio en el bloque
             for _, content := range folderBlock.B_content {
-                name := strings.TrimRight(string(content.B_name[:]), "\x00")
+                name := strings.TrimSpace(strings.Trim(string(content.B_name[:]), "\x00 "))
+                fmt.Printf("Comparando '%s' con '%s'\n", name, dir)
                 if name == dir {
-                    // Cargar el inodo correspondiente
+                    // Avanzar al siguiente inodo
                     currentInode = &Inode{}
                     err := currentInode.Deserialize(partitionPath, int64(sb.S_inode_start+(content.B_inodo*sb.S_inode_size)))
                     if err != nil {
@@ -450,41 +502,108 @@ func (sb *SuperBlock) FindInode(partitionPath string, parentDirs []string, destD
                     break
                 }
             }
-
             if found {
                 break
             }
         }
-
+        // Si no se encontró en el inodo actual, buscar en todos los inodos de tipo carpeta (búsqueda profunda)
         if !found {
+            for i := int32(0); i < sb.S_inodes_count; i++ {
+                tempInode := &Inode{}
+                _ = tempInode.Deserialize(partitionPath, int64(sb.S_inode_start+(i*sb.S_inode_size)))
+                if tempInode.I_type[0] == '0' { // Solo en carpetas
+                    for _, blockIndex := range tempInode.I_block {
+                        if blockIndex == -1 {
+                            continue
+                        }
+                        folderBlock := &FolderBlock{}
+                        err := folderBlock.Deserialize(partitionPath, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+                        if err != nil {
+                            continue
+                        }
+                        for _, content := range folderBlock.B_content {
+                            name := strings.TrimSpace(strings.Trim(string(content.B_name[:]), "\x00 "))
+                            if name == dir {
+                                // Avanzar al siguiente inodo
+                                currentInode = &Inode{}
+                                err := currentInode.Deserialize(partitionPath, int64(sb.S_inode_start+(content.B_inodo*sb.S_inode_size)))
+                                if err != nil {
+                                    return nil, fmt.Errorf("error al deserializar el inodo: %w", err)
+                                }
+                                found = true
+                                break
+                            }
+                        }
+                        if found {
+                            break
+                        }
+                    }
+                }
+                if found {
+                    break
+                }
+            }
+        }
+        if !found {
+            fmt.Printf("No se encontró la carpeta '%s'\n", dir)
             return nil, fmt.Errorf("directorio '%s' no encontrado", dir)
         }
     }
 
-    // Verificar si el directorio destino existe
+    // Si no se busca un directorio destino específico, retornar el inodo actual
+    if destDir == "" {
+        return currentInode, nil
+    }
+
+    // Buscar el directorio destino en los bloques del inodo actual
     for _, blockIndex := range currentInode.I_block {
         if blockIndex == -1 {
-            break
+            continue
         }
-
-        // Leer el bloque de carpeta
         folderBlock := &FolderBlock{}
         err := folderBlock.Deserialize(partitionPath, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
         if err != nil {
-            return nil, fmt.Errorf("error al deserializar el bloque de carpeta: %w", err)
+            continue
         }
-
-        // Buscar el directorio destino en el bloque
         for _, content := range folderBlock.B_content {
-            name := strings.TrimRight(string(content.B_name[:]), "\x00")
+            name := strings.TrimSpace(strings.Trim(string(content.B_name[:]), "\x00 "))
+            fmt.Printf("Comparando '%s' con '%s'\n", name, destDir)
             if name == destDir {
-                // Cargar el inodo correspondiente
                 destInode := &Inode{}
                 err := destInode.Deserialize(partitionPath, int64(sb.S_inode_start+(content.B_inodo*sb.S_inode_size)))
                 if err != nil {
                     return nil, fmt.Errorf("error al deserializar el inodo: %w", err)
                 }
                 return destInode, nil
+            }
+        }
+    }
+
+    // Si no se encontró en el inodo actual, buscar en todos los inodos de tipo carpeta (búsqueda profunda)
+    for i := int32(0); i < sb.S_inodes_count; i++ {
+        tempInode := &Inode{}
+        _ = tempInode.Deserialize(partitionPath, int64(sb.S_inode_start+(i*sb.S_inode_size)))
+        if tempInode.I_type[0] == '0' {
+            for _, blockIndex := range tempInode.I_block {
+                if blockIndex == -1 {
+                    continue
+                }
+                folderBlock := &FolderBlock{}
+                err := folderBlock.Deserialize(partitionPath, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+                if err != nil {
+                    continue
+                }
+                for _, content := range folderBlock.B_content {
+                    name := strings.TrimSpace(strings.Trim(string(content.B_name[:]), "\x00 "))
+                    if name == destDir {
+                        destInode := &Inode{}
+                        err := destInode.Deserialize(partitionPath, int64(sb.S_inode_start+(content.B_inodo*sb.S_inode_size)))
+                        if err != nil {
+                            return nil, fmt.Errorf("error al deserializar el inodo: %w", err)
+                        }
+                        return destInode, nil
+                    }
+                }
             }
         }
     }
