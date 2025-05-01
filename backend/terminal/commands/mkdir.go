@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"strings"
 	"os"
-	"path/filepath"
 )
 
 // MKDIR estructura que representa el comando mkdir con sus parámetros
@@ -198,8 +197,6 @@ func createDirectory(dirPath string, sb *structures.SuperBlock, partitionPath st
         }
     }
 
-    physicalBasePath := dirPath
-
     // Validar si las carpetas padres existen y crearlas correctamente
     for i, parent := range parentDirs {
         exists, err := sb.FolderExists(partitionPath, strings.Join(parentDirs[:i+1], "/"))
@@ -217,27 +214,27 @@ func createDirectory(dirPath string, sb *structures.SuperBlock, partitionPath st
             if err != nil {
                 return fmt.Errorf("error al crear la carpeta padre '%s': %w", parent, err)
             }
-            // Crear físicamente la carpeta en el sistema operativo dentro de la ruta definida
-            physicalPath := filepath.Join(physicalBasePath, filepath.Join(parentDirs[:i+1]...))
-            err = os.MkdirAll(physicalPath, 0755)
-            if err != nil {
-                return fmt.Errorf("error al crear físicamente la carpeta '%s': %w", physicalPath, err)
-            }
-            fmt.Printf("Carpeta creada físicamente: %s\n", physicalPath)
+            // Elimina o comenta la creación física:
+            // physicalPath := filepath.Join(physicalBasePath, filepath.Join(parentDirs[:i+1]...))
+            // err = os.MkdirAll(physicalPath, 0755)
+            // if err != nil {
+            //     return fmt.Errorf("error al crear físicamente la carpeta '%s': %w", physicalPath, err)
+            // }
+            // fmt.Printf("Carpeta creada físicamente: %s\n", physicalPath)
         }
     }
 
-    // Crear físicamente el directorio destino dentro de la ruta definida
-    fullPath := filepath.Join(physicalBasePath, filepath.Join(filepath.Join(parentDirs...), destDir))
-    fullPath = filepath.Clean(fullPath)
-    err := os.MkdirAll(fullPath, 0755)
-    if err != nil {
-        return fmt.Errorf("error al crear físicamente el directorio '%s': %w", fullPath, err)
-    }
-    fmt.Printf("Directorio creado físicamente: %s\n", fullPath)
+    // Elimina o comenta la creación física del directorio destino:
+    // fullPath := filepath.Join(physicalBasePath, filepath.Join(filepath.Join(parentDirs...), destDir))
+    // fullPath = filepath.Clean(fullPath)
+    // err := os.MkdirAll(fullPath, 0755)
+    // if err != nil {
+    //     return fmt.Errorf("error al crear físicamente el directorio '%s': %w", fullPath, err)
+    // }
+    // fmt.Printf("Directorio creado físicamente: %s\n", fullPath)
 
     // Crear el directorio según el path proporcionado
-    err = sb.CreateFolder(partitionPath, parentDirs, destDir)
+    err := sb.CreateFolder(partitionPath, parentDirs, destDir)
     if err != nil {
         return fmt.Errorf("error al crear el directorio: %w", err)
     }
