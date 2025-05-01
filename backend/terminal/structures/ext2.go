@@ -174,6 +174,24 @@ func (sb *SuperBlock) createFolderInInodeExt2(path string, inodeIndex int32, par
     if inode.I_type[0] == '1' {
         return nil
     }
+    // 1. Buscar si ya existe la carpeta en los bloques del inodo padre
+    for _, blockIndex := range inode.I_block {
+        if blockIndex == -1 {
+            break
+        }
+        block := &FolderBlock{}
+        err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+        if err != nil {
+            return err
+        }
+        for k := 2; k < 4; k++ {
+            name := strings.TrimRight(string(block.B_content[k].B_name[:]), "\x00")
+            if name == destDir && block.B_content[k].B_inodo != -1 {
+                // Ya existe la carpeta, no crearla de nuevo
+                return nil
+            }
+        }
+    }
 
     // 1. Buscar un bloque de carpeta del padre con espacio para el nuevo folder
     for i, blockIndex := range inode.I_block {

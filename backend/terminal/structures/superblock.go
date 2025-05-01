@@ -329,6 +329,7 @@ func (sb *SuperBlock) GetUsersBlock(path string) (*FileBlock, error) {
 // CreateFolder crea una carpeta en el sistema de archivos, creando padres uno por uno si es necesario
 func (sb *SuperBlock) CreateFolder(path string, parentsDir []string, destDir string) error {
     // Crear padres uno por uno en los inodos/bloques
+    parentInode := int32(0) // Siempre empezamos desde el inodo raíz
     for i := range parentsDir {
         subParents := parentsDir[:i]
         current := parentsDir[i]
@@ -338,24 +339,43 @@ func (sb *SuperBlock) CreateFolder(path string, parentsDir []string, destDir str
         if !exists {
             fmt.Printf("Creando carpeta en inodo: parentDirs=%v, destDir=%s\n", subParents, current)
             if sb.S_filesystem_type == 3 {
-                err := sb.createFolderInInodeExt3(path, 0, subParents, current)
+                err := sb.createFolderInInodeExt3(path, parentInode, subParents, current)
                 if err != nil {
                     return err
                 }
             } else {
-                err := sb.createFolderInInodeExt2(path, 0, subParents, current)
+                err := sb.createFolderInInodeExt2(path, parentInode, subParents, current)
                 if err != nil {
                     return err
                 }
             }
         }
+        // Buscar el inodo del directorio recién creado o existente para el siguiente ciclo
+        inode, err := sb.FindInode(path, subParents, current)
+        if err == nil && inode != nil {
+            parentInode = inodeIndexFromInode(sb, path, inode)
+        } else {
+            parentInode = 0 // Si no se encuentra, volver a raíz (por seguridad)
+        }
     }
-    // Finalmente, crear la carpeta destino
+    // Finalmente, crear la carpeta destino en el último inodo padre encontrado
     fmt.Printf("Creando carpeta destino en inodo: parentDirs=%v, destDir=%s\n", parentsDir, destDir)
     if sb.S_filesystem_type == 3 {
-        return sb.createFolderInInodeExt3(path, 0, parentsDir, destDir)
+        return sb.createFolderInInodeExt3(path, parentInode, parentsDir, destDir)
     }
-    return sb.createFolderInInodeExt2(path, 0, parentsDir, destDir)
+    return sb.createFolderInInodeExt2(path, parentInode, parentsDir, destDir)
+}
+
+// Función auxiliar para obtener el índice de un inodo dado
+func inodeIndexFromInode(sb *SuperBlock, path string, inode *Inode) int32 {
+    for i := int32(0); i < sb.S_inodes_count; i++ {
+        temp := &Inode{}
+        _ = temp.Deserialize(path, int64(sb.S_inode_start+(i*sb.S_inode_size)))
+        if temp.I_uid == inode.I_uid && temp.I_gid == inode.I_gid && temp.I_ctime == inode.I_ctime {
+            return i
+        }
+    }
+    return 0
 }
 // CreateFile crea un archivo en el sistema de archivos
 func (sb *SuperBlock) CreateFile(path string, parentsDir []string, destFile string, size int, cont []string) error {
