@@ -326,37 +326,36 @@ func (sb *SuperBlock) GetUsersBlock(path string) (*FileBlock, error) {
 	return nil, fmt.Errorf("users.txt block not found")
 }
 // CreateFolder crea una carpeta en el sistema de archivos
+// CreateFolder crea una carpeta en el sistema de archivos, creando padres uno por uno si es necesario
 func (sb *SuperBlock) CreateFolder(path string, parentsDir []string, destDir string) error {
-    // Validar el sistema de archivos
-    if sb.S_filesystem_type == 3 {
-        // Si parentsDir está vacío, trabajar con el inodo raíz "/"
-        if len(parentsDir) == 0 {
-            return sb.createFolderInInodeExt3(path, 0, parentsDir, destDir)
-        }
-
-        // Iterar sobre los inodos para buscar el inodo padre
-        for i := int32(0); i < sb.S_inodes_count; i++ {
-            err := sb.createFolderInInodeExt3(path, i, parentsDir, destDir)
-            if err != nil {
-                return err
-            }
-        }
-    } else {
-        // Si parentsDir está vacío, trabajar con el inodo raíz "/"
-        if len(parentsDir) == 0 {
-            return sb.createFolderInInodeExt2(path, 0, parentsDir, destDir)
-        }
-
-        // Iterar sobre los inodos para buscar el inodo padre
-        for i := int32(0); i < sb.S_inodes_count; i++ {
-            err := sb.createFolderInInodeExt2(path, i, parentsDir, destDir)
-            if err != nil {
-                return err
+    // Crear padres uno por uno en los inodos/bloques
+    for i := range parentsDir {
+        subParents := parentsDir[:i]
+        current := parentsDir[i]
+        fullPath := "/" + strings.Join(append(subParents, current), "/")
+        fmt.Printf("Verificando existencia de carpeta '%s' en inodos/bloques\n", fullPath)
+        exists, _ := sb.FolderExists(path, fullPath)
+        if !exists {
+            fmt.Printf("Creando carpeta en inodo: parentDirs=%v, destDir=%s\n", subParents, current)
+            if sb.S_filesystem_type == 3 {
+                err := sb.createFolderInInodeExt3(path, 0, subParents, current)
+                if err != nil {
+                    return err
+                }
+            } else {
+                err := sb.createFolderInInodeExt2(path, 0, subParents, current)
+                if err != nil {
+                    return err
+                }
             }
         }
     }
-
-    return nil
+    // Finalmente, crear la carpeta destino
+    fmt.Printf("Creando carpeta destino en inodo: parentDirs=%v, destDir=%s\n", parentsDir, destDir)
+    if sb.S_filesystem_type == 3 {
+        return sb.createFolderInInodeExt3(path, 0, parentsDir, destDir)
+    }
+    return sb.createFolderInInodeExt2(path, 0, parentsDir, destDir)
 }
 // CreateFile crea un archivo en el sistema de archivos
 func (sb *SuperBlock) CreateFile(path string, parentsDir []string, destFile string, size int, cont []string) error {
