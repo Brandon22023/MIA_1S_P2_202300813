@@ -56,6 +56,8 @@ func Analyzer(input string) (string, error) {
 		return commands.ParseRename(tokens[1:])
 	case "copy":
         return commands.ParseCopy(tokens[1:])
+	case "move":
+        return commands.ParseMove(tokens[1:])
 	default:
 		// Si el comando no es reconocido, devuelve un error
 		return "", fmt.Errorf("comando desconocido: %s", tokens[0])
