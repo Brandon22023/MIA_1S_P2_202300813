@@ -481,6 +481,7 @@ func (sb *SuperBlock) createFileInInode(path string, inodeIndex int32, parentsDi
 func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
     TxtFilesExtracted = []TxtFile{}
     validPaths := global.GetValidFilePathsMkfile()
+
     for inodeIndex := int32(0); inodeIndex < sb.S_inodes_count; inodeIndex++ {
         inode := &Inode{}
         err := inode.Deserialize(path, int64(sb.S_inode_start+(inodeIndex*sb.S_inode_size)))
@@ -539,6 +540,39 @@ func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
                         })
                     }
                 }
+            }
+            // EXCEPCIÓN: Si el archivo es users.txt, agrégalo siempre
+            if foundName == "users.txt" {
+                var contenido string
+                for _, blockIndex := range inode.I_block {
+                    if blockIndex == -1 {
+                        break
+                    }
+                    block := &FileBlock{}
+                    err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+                    if err != nil {
+                        continue
+                    }
+                    bloqueContenido := strings.TrimRight(string(block.B_content[:]), "\x00")
+                    contenido += bloqueContenido
+                }
+                // Si no está en la lista global, agrégalo
+                found := false
+                for _, p := range global.ValidFilePaths_mkfile {
+                    if p == "/users.txt" {
+                        found = true
+                        break
+                    }
+                }
+                if !found {
+                    global.ValidFilePaths_mkfile = append(global.ValidFilePaths_mkfile, "/users.txt")
+                }
+                TxtFilesExtracted = append(TxtFilesExtracted, TxtFile{
+                    Path:      "/users.txt",
+                    ID:        partitionID,
+                    Contenido: contenido,
+                    Size:      inode.I_size,
+                })
             }
         }
     }
