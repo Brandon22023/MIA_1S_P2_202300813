@@ -107,3 +107,8 @@ mkdir -p -path="/home/archivos/carpeta1/carpeta2/carpeta3/carpeta4/carpeta5"
 
 mkfile -path=/home/archivos/user/docs/Tarea.txt -size=75
 mkfile -path=/home/archivos/user/docs/Tarea2.txt -size=768
+
+mkfile -path="/home/archivos/noexiste/b1.txt"
+mkfile -path="/home/archivos/b1.txt" -size=-45
+
+mkfile -r -path=/home/archivos/user/docs/usac/archivos/proyectos/fase1/entrada.txt

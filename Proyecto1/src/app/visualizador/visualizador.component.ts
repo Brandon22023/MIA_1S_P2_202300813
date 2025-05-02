@@ -51,46 +51,58 @@ export class VisualizadorComponent {
     });
   }
   loadTxtFiles(): void {
-  this.analyzerService.getTxtFiles().subscribe({
-    next: (response) => {
-      console.log('Respuesta real del backend txtfiles:', response);
-      this.txt = response.map(file => ({
-        ...file,
-        permissions: '664',
-        size: file.size ?? 0
-      }));
-      console.log('Archivos txt cargados en this.txt:', this.txt);
-    },
-    error: (err) => {
-      console.log('Error al cargar archivos txt:', err);
-    }
-  });
-}
+    this.analyzerService.getTxtFiles().subscribe({
+      next: (response) => {
+        console.log('Respuesta real del backend txtfiles:', response);
+        this.txt = response.map(file => ({
+          ...file,
+          permissions: '664',
+          size: file.size ?? 0
+        }));
+        console.log('Archivos txt cargados en this.txt:', this.txt);
   
-  createFoldersFromPath(path: string, id: string): void {
-    const parts = path.split('/');
-    let currentPath = '';
-  
-    parts.forEach((part) => {
-      // Validar que el segmento no esté vacío o compuesto solo por espacios
-      if (part.trim() === '') {
-        return; // Ignorar segmentos vacíos
-      }
-  
-      currentPath = currentPath ? `${currentPath}/${part}` : part;
-  
-      // Verifica si la carpeta ya existe
-      if (!this.carpetas.find((folder) => folder.path === currentPath)) {
-        this.carpetas.push({ path: currentPath, id, permissions: '664' });
+        // Crear carpetas intermedias para cada archivo txt
+        this.txt.forEach(file => {
+          // Ignora archivos en la raíz (sin '/')
+          const normalizedPath = file.path.startsWith('/') ? file.path.substring(1) : file.path;
+          const parts = normalizedPath.split('/');
+          if (parts.length > 1) {
+            parts.pop(); // Quita el nombre del archivo
+            const folderPath = parts.join('/');
+            if (folderPath) {
+              this.createFoldersFromPath(folderPath, file.id);
+            }
+          }
+        });
+      },
+      error: (err) => {
+        console.log('Error al cargar archivos txt:', err);
       }
     });
   }
+  
+createFoldersFromPath(path: string, id: string): void {
+  const parts = path.split('/');
+  let currentPath = '';
+
+  parts.forEach((part) => {
+    if (part.trim() === '') {
+      return; // Ignorar segmentos vacíos
+    }
+    currentPath = currentPath ? `${currentPath}/${part}` : part;
+    // Verifica si la carpeta ya existe para ese id
+    if (!this.carpetas.find((folder) => folder.path === currentPath && folder.id === id)) {
+      this.carpetas.push({ path: currentPath, id, permissions: '664' });
+    }
+  });
+}
 
   getCurrentFolders(): { path: string; id: string; permissions: string }[] {
     const depth = this.currentPath ? this.currentPath.split('/').length : 0;
     return this.carpetas.filter((folder) => {
       const parts = folder.path.split('/');
       return (
+        folder.id === this.selectedpartId && // Filtra por partición
         parts.length === depth + 1 && // Debe estar en el siguiente nivel
         folder.path.startsWith(this.currentPath) // Debe comenzar con la ruta actual
       );
@@ -195,34 +207,34 @@ export class VisualizadorComponent {
   }
 
   createFileFromPath(path: string, id: string, contenido: string, size: number): void {
-    // Buscar si ya existe el archivo con ese path e id
+    // Verifica si ya existe el archivo con ese path e id
     const existingFile = this.txt.find(file => file.path === path && file.id === id);
     if (existingFile) {
-      // Si existe, solo actualiza el contenido
       existingFile.contenido = contenido;
+      existingFile.size = size;
       console.log(`Archivo ${path} reescrito en partición ${id}`);
       return;
     }
-    // Si no existe, lo crea normalmente
+  
+    // Crear carpetas intermedias si no existen
     const parts = path.split('/');
     const fileName = parts.pop();
-    let currentPath = '';
-    parts.forEach((part) => {
-      if (part.trim() === '') return;
-      currentPath = currentPath ? `${currentPath}/${part}` : part;
-      if (!this.carpetas.find((folder) => folder.path === currentPath)) {
-        this.carpetas.push({ path: currentPath, id, permissions: '664' });
-      }
-    });
-    if (fileName) {
+    const folderPath = parts.join('/');
+    if (folderPath) {
+      this.createFoldersFromPath(folderPath, id);
+    }
+  
+    // Crear el archivo
+    if (fileName && fileName.trim() !== '') {
+      const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
       this.txt.push({
-        path: currentPath ? `${currentPath}/${fileName}` : `/${fileName}`,
+        path: filePath,
         id,
         permissions: '664',
         contenido,
         size,
       });
-      console.log(`Archivo creado: ${fileName} en ${currentPath || 'raíz'}`);
+      console.log(`Archivo creado: ${fileName} en ${folderPath || 'raíz'}`);
     } else {
       console.error('El nombre del archivo no es válido.');
     }
