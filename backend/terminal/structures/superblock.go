@@ -815,3 +815,46 @@ func (sb *SuperBlock) GenerateTreeDot(path string, outputPath string) error {
     return nil
 }
 
+func (sb *SuperBlock) RemoveFile(path string, parentsDir []string, destFile string) error {
+    // 1. Buscar el inodo de la carpeta destino
+    var parentInodeIndex int32 = 0 // raíz
+    if len(parentsDir) > 0 {
+        inode, err := sb.FindInode(path, parentsDir[:len(parentsDir)-1], parentsDir[len(parentsDir)-1])
+        if err != nil {
+            return fmt.Errorf("carpeta destino no encontrada: %w", err)
+        }
+        parentInodeIndex = inodeIndexFromInode(sb, path, inode)
+    }
+
+    // 2. Buscar el archivo en los FolderBlock de la carpeta destino
+    parentInode := &Inode{}
+    err := parentInode.Deserialize(path, int64(sb.S_inode_start+(parentInodeIndex*sb.S_inode_size)))
+    if err != nil {
+        return err
+    }
+    for _, blockIndex := range parentInode.I_block {
+        if blockIndex == -1 {
+            break
+        }
+        block := &FolderBlock{}
+        err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+        if err != nil {
+            continue
+        }
+        for k := 2; k < 4; k++ {
+            name := strings.Trim(string(block.B_content[k].B_name[:]), "\x00 ")
+            if name == destFile && block.B_content[k].B_inodo != -1 {
+                // Marcar como eliminado
+                block.B_content[k].B_inodo = -1
+                for i := range block.B_content[k].B_name {
+                    block.B_content[k].B_name[i] = 0
+                }
+                // Serializar el bloque actualizado
+                block.Serialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+                // (Opcional: liberar inodo y bloques del archivo)
+                return nil
+            }
+        }
+    }
+    return nil // No se encontró, pero no es error crítico para copy
+}

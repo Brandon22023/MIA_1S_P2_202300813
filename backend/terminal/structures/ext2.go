@@ -517,53 +517,27 @@ func (sb *SuperBlock) createFileInInode(path string, inodeIndex int32, parentsDi
 	return nil
 }
 func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
-    //fmt.Println("========== INICIO ExtractTxtFiles ==========")
     TxtFilesExtracted = []TxtFile{}
+    validPaths := global.GetValidFilePathsMkfile()
     for inodeIndex := int32(0); inodeIndex < sb.S_inodes_count; inodeIndex++ {
-        //fmt.Printf("\n[Depuración] Analizando inodo %d\n", inodeIndex)
         inode := &Inode{}
         err := inode.Deserialize(path, int64(sb.S_inode_start+(inodeIndex*sb.S_inode_size)))
         if err != nil {
-            //fmt.Printf("[Depuración] Error deserializando inodo %d: %v\n", inodeIndex, err)
             continue
         }
-        //fmt.Printf("[Depuración] Inodo %d tipo: %c\n", inodeIndex, inode.I_type[0])
         if inode.I_type[0] == '1' {
             foundName := ""
-            foundPath := ""
             // Buscar el nombre en todos los bloques de carpeta
             for blockIdx := int32(0); blockIdx < sb.S_blocks_count; blockIdx++ {
                 folderBlock := &FolderBlock{}
                 err := folderBlock.Deserialize(path, int64(sb.S_block_start+(blockIdx*sb.S_block_size)))
                 if err != nil {
-                    //fmt.Printf("[Depuración] Error deserializando bloque %d: %v\n", blockIdx, err)
                     continue
                 }
                 for _, content := range folderBlock.B_content {
                     name := strings.TrimSpace(strings.Trim(string(content.B_name[:]), "\x00 "))
-                    //fmt.Printf("[Depuración] Bloque %d, Content %d: name='%s', inodo=%d\n", blockIdx, i, name, content.B_inodo)
                     if content.B_inodo == inodeIndex && name != "" && name != "." && name != ".." {
                         foundName = name
-                        // Buscar path válido por coincidencia de las primeras 5 letras
-                        foundPath = ""
-                        validPaths := global.GetValidFilePathsMkfile()
-                        for _, validPath := range validPaths {
-                            validName := validPath
-                            if idx := strings.LastIndex(validPath, "/"); idx != -1 {
-                                validName = validPath[idx+1:]
-                            }
-                            //fmt.Printf("[Depuración] Comparando '%s' con '%s'\n", validName, name)
-                            if len(validName) >= 5 && len(name) >= 5 && validName[:5] == name[:5] {
-                                foundPath = validPath
-                              //  fmt.Printf("[Depuración] Coincidencia de primeras 5 letras: '%s' ~ '%s'\n", validName, name)
-                                break
-                            }
-                        }
-                        if foundPath == "" {
-                            foundPath = "/" + name // fallback
-                            //fmt.Printf("[Depuración] No se encontró path válido, usando fallback: %s\n", foundPath)
-                        }
-                        //fmt.Printf("[Depuración] Inodo %d: nombre encontrado '%s', path '%s'\n", inodeIndex, name, foundPath)
                         break
                     }
                 }
@@ -571,41 +545,41 @@ func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
                     break
                 }
             }
-            // Si encontró coincidencia, extraer
-            if foundName != "" && foundPath != "" && strings.HasSuffix(foundPath, ".txt") {
-                //fmt.Printf("[Depuración] Extrayendo archivo .txt: %s (inodo %d)\n", foundName, inodeIndex)
+            // Si encontró nombre y es .txt, buscar TODAS las coincidencias en la lista global
+            if foundName != "" && strings.HasSuffix(foundName, ".txt") {
                 var contenido string
                 for _, blockIndex := range inode.I_block {
                     if blockIndex == -1 {
-                        //fmt.Printf("[Depuración] Inodo %d: I_block[%d] = -1 (fin de bloques)\n", inodeIndex, i)
                         break
                     }
                     block := &FileBlock{}
                     err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
                     if err != nil {
-                        //fmt.Printf("[Depuración] Error deserializando bloque de archivo %d: %v\n", blockIndex, err)
                         continue
                     }
                     bloqueContenido := strings.TrimRight(string(block.B_content[:]), "\x00")
-                    //fmt.Printf("[Depuración] Bloque de archivo %d: contenido='%s'\n", blockIndex, bloqueContenido)
                     contenido += bloqueContenido
                 }
-                txtFile := TxtFile{
-                    Path:      foundPath,
-                    ID:        partitionID,
-                    Contenido: contenido,
-                    Size:      inode.I_size,
+                // Buscar todas las coincidencias de path en la lista global
+                for _, validPath := range validPaths {
+                    // Extraer el nombre del archivo del path
+                    parts := strings.Split(validPath, "/")
+                    if len(parts) == 0 {
+                        continue
+                    }
+                    validName := parts[len(parts)-1]
+                    if validName == foundName {
+                        TxtFilesExtracted = append(TxtFilesExtracted, TxtFile{
+                            Path:      validPath,
+                            ID:        partitionID,
+                            Contenido: contenido,
+                            Size:      inode.I_size,
+                        })
+                    }
                 }
-                TxtFilesExtracted = append(TxtFilesExtracted, txtFile)
-                //fmt.Printf("[Depuración] Archivo .txt extraído: %s | Path: %s | Size: %d\n", foundName, foundPath, inode.I_size)
-            } else if foundName != "" {
-               // fmt.Printf("[Depuración] Archivo encontrado pero no es .txt: %s (inodo %d, path: %s)\n", foundName, inodeIndex, foundPath)
-            } else {
-              //  fmt.Printf("[Depuración] No se encontró nombre para inodo %d\n", inodeIndex)
             }
         }
     }
-    //fmt.Println("========== FIN ExtractTxtFiles ==========")
     return nil
 }
 

@@ -33,5 +33,6 @@ mkdir -path="/calificacion/COPY_TEST"
 mkfile -path=/calificacion/COPY_TEST/moveme.txt -size=768
 mkdir -path=/calificacion/MOVE
 remove -path=/calificacion/TEST/borrar.txt
+rename -path=/calificacion/TEST/cambiar_nombre.txt -name=cambiado.txt
 
 logout
