@@ -36,4 +36,5 @@ remove -path=/calificacion/TEST/borrar.txt
 rename -path=/calificacion/TEST/cambiar_nombre.txt -name=cambiado.txt
 copy -path=/calificacion/TEST -destino=/calificacion/COPY_TEST 
 move -path=/calificacion/COPY_TEST/moveme.txt -destino=/calificacion/MOVE
+find -path="/" -name="*"
 logout

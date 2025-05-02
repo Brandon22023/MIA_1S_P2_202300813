@@ -166,9 +166,7 @@ func (sb *SuperBlock) CreateUsersFileExt2(path string) error {
 	return nil
 }
 
-// createFolderInInode crea una carpeta en un inodo específico
 func (sb *SuperBlock) createFolderInInodeExt2(path string, inodeIndex int32, parentsDir []string, destDir string) error {
-    fmt.Printf("-> createFolderInInodeExt2: inodeIndex=%d, parentsDir=%v, destDir=%s\n", inodeIndex, parentsDir, destDir)
     inode := &Inode{}
     err := inode.Deserialize(path, int64(sb.S_inode_start+(inodeIndex*sb.S_inode_size)))
     if err != nil {
@@ -197,173 +195,137 @@ func (sb *SuperBlock) createFolderInInodeExt2(path string, inodeIndex int32, par
         }
     }
 
-    // 1. Buscar un bloque de carpeta del padre con espacio para el nuevo folder
-    for i, blockIndex := range inode.I_block {
+    // 2. Buscar un bloque de carpeta del padre con espacio para el nuevo folder
+    var parentBlockIndex int32 = -1
+    var parentBlockSlot int = -1
+    for _, blockIndex := range inode.I_block {
         if blockIndex == -1 {
-            // No hay bloque, creamos uno nuevo para la carpeta hija
-            newBlockIndex := sb.S_blocks_count
-            inode.I_block[i] = newBlockIndex
+            break
+        }
+        block := &FolderBlock{}
+        err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+        if err != nil {
+            return err
+        }
+        for k := 2; k < 4; k++ {
+            if block.B_content[k].B_inodo == -1 {
+                parentBlockIndex = blockIndex
+                parentBlockSlot = k
+                break
+            }
+        }
+        if parentBlockIndex != -1 {
+            break
+        }
+    }
 
-            // Crear bloque de la nueva carpeta
-            newBlock := &FolderBlock{
-                B_content: [4]FolderContent{
-                    {B_name: [12]byte{'.'}, B_inodo: sb.S_inodes_count},
-                    {B_name: [12]byte{'.', '.'}, B_inodo: inodeIndex},
-                    {B_name: [12]byte{'-'}, B_inodo: -1},
-                    {B_name: [12]byte{'-'}, B_inodo: -1},
-                },
-            }
-            // Serializar el bloque de la nueva carpeta
-            err := newBlock.Serialize(path, int64(sb.S_first_blo))
-            if err != nil {
-                return err
-            }
-            // Actualizar bitmap y superbloque de bloques
-            err = sb.UpdateBitmapBlock(path)
-            if err != nil {
-                return err
-            }
-            sb.S_blocks_count++
-            sb.S_free_blocks_count--
-            sb.S_first_blo += sb.S_block_size
+    // 3. Si no hay espacio en ningún bloque del padre, crea un nuevo bloque y enlázalo
+    if parentBlockIndex == -1 {
+        for i := 0; i < len(inode.I_block); i++ {
+            if inode.I_block[i] == -1 {
+                newParentBlockIndex := sb.S_blocks_count
+                newParentBlock := &FolderBlock{}
+                // Inicializa los slots del nuevo bloque del padre
+                copy(newParentBlock.B_content[0].B_name[:], ".")
+                newParentBlock.B_content[0].B_inodo = inodeIndex
+                copy(newParentBlock.B_content[1].B_name[:], "..")
+                newParentBlock.B_content[1].B_inodo = 0 // O el inodo padre real si lo tienes
+                copy(newParentBlock.B_content[2].B_name[:], destDir)
+                newParentBlock.B_content[2].B_inodo = sb.S_inodes_count // El inodo que se va a crear
+                newParentBlock.B_content[3].B_inodo = -1
 
-            // Crear el inodo de la nueva carpeta
-            newInode := &Inode{
-                I_uid:   1,
-                I_gid:   1,
-                I_size:  0,
-                I_atime: float32(time.Now().Unix()),
-                I_ctime: float32(time.Now().Unix()),
-                I_mtime: float32(time.Now().Unix()),
-                I_block: [15]int32{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-                I_type:  [1]byte{'0'},
-                I_perm:  [3]byte{'6', '6', '4'},
-            }
-            newInode.I_block[0] = newBlockIndex
-
-            // Serializar el nuevo inodo
-            err = newInode.Serialize(path, int64(sb.S_first_ino))
-            if err != nil {
-                return err
-            }
-            // Actualizar bitmap y superbloque de inodos
-            err = sb.UpdateBitmapInode(path)
-            if err != nil {
-                return err
-            }
-            sb.S_inodes_count++
-            sb.S_free_inodes_count--
-            sb.S_first_ino += sb.S_inode_size
-
-            // ENLAZAR la nueva carpeta en el bloque de su padre
-            // Buscar el primer bloque del padre con espacio
-            for j := 0; j < len(inode.I_block); j++ {
-                parentBlockIndex := inode.I_block[j]
-                if parentBlockIndex == -1 {
-                    break
-                }
-                parentBlock := &FolderBlock{}
-                err := parentBlock.Deserialize(path, int64(sb.S_block_start+(parentBlockIndex*sb.S_block_size)))
+                // Serializar el nuevo bloque del padre
+                err := newParentBlock.Serialize(path, int64(sb.S_first_blo))
                 if err != nil {
                     return err
                 }
-                for k := 2; k < 4; k++ {
-                    if parentBlock.B_content[k].B_inodo == -1 {
-                        copy(parentBlock.B_content[k].B_name[:], destDir)
-                        parentBlock.B_content[k].B_inodo = sb.S_inodes_count - 1 // El último inodo creado
-                        // Serializar el bloque actualizado
-                        err = parentBlock.Serialize(path, int64(sb.S_block_start+(parentBlockIndex*sb.S_block_size)))
-                        if err != nil {
-                            return err
-                        }
-                        // Serializar el inodo padre actualizado
-                        err = inode.Serialize(path, int64(sb.S_inode_start+(inodeIndex*sb.S_inode_size)))
-                        if err != nil {
-                            return err
-                        }
-                        return nil
-                    }
+                inode.I_block[i] = newParentBlockIndex
+                err = inode.Serialize(path, int64(sb.S_inode_start+(inodeIndex*sb.S_inode_size)))
+                if err != nil {
+                    return err
                 }
-            }
-            // Si no hay espacio en ningún bloque del padre, deberías crear un nuevo bloque y enlazarlo (no implementado aquí)
-            return nil
-        } else {
-            // Si el bloque existe, buscar espacio para enlazar la nueva carpeta
-            block := &FolderBlock{}
-            err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
-            if err != nil {
-                return err
-            }
-            for k := 2; k < 4; k++ {
-                if block.B_content[k].B_inodo == -1 {
-                    // Ya existe espacio, así que solo crear el inodo y el bloque de la nueva carpeta
-                    // Crear el bloque de la nueva carpeta
-                    newBlockIndex := sb.S_blocks_count
-                    newBlock := &FolderBlock{
-                        B_content: [4]FolderContent{
-                            {B_name: [12]byte{'.'}, B_inodo: sb.S_inodes_count},
-                            {B_name: [12]byte{'.', '.'}, B_inodo: inodeIndex},
-                            {B_name: [12]byte{'-'}, B_inodo: -1},
-                            {B_name: [12]byte{'-'}, B_inodo: -1},
-                        },
-                    }
-                    err := newBlock.Serialize(path, int64(sb.S_first_blo))
-                    if err != nil {
-                        return err
-                    }
-                    err = sb.UpdateBitmapBlock(path)
-                    if err != nil {
-                        return err
-                    }
-                    sb.S_blocks_count++
-                    sb.S_free_blocks_count--
-                    sb.S_first_blo += sb.S_block_size
-
-                    // Crear el inodo de la nueva carpeta
-                    newInode := &Inode{
-                        I_uid:   1,
-                        I_gid:   1,
-                        I_size:  0,
-                        I_atime: float32(time.Now().Unix()),
-                        I_ctime: float32(time.Now().Unix()),
-                        I_mtime: float32(time.Now().Unix()),
-                        I_block: [15]int32{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-                        I_type:  [1]byte{'0'},
-                        I_perm:  [3]byte{'6', '6', '4'},
-                    }
-                    newInode.I_block[0] = newBlockIndex
-
-                    err = newInode.Serialize(path, int64(sb.S_first_ino))
-                    if err != nil {
-                        return err
-                    }
-                    err = sb.UpdateBitmapInode(path)
-                    if err != nil {
-                        return err
-                    }
-                    sb.S_inodes_count++
-                    sb.S_free_inodes_count--
-                    sb.S_first_ino += sb.S_inode_size
-
-                    // Enlazar la nueva carpeta en el bloque actual
-                    copy(block.B_content[k].B_name[:], destDir)
-                    block.B_content[k].B_inodo = sb.S_inodes_count - 1
-                    err = block.Serialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
-                    if err != nil {
-                        return err
-                    }
-                    err = inode.Serialize(path, int64(sb.S_inode_start+(inodeIndex*sb.S_inode_size)))
-                    if err != nil {
-                        return err
-                    }
-                    return nil
+                sb.S_blocks_count++
+                sb.S_free_blocks_count--
+                sb.S_first_blo += sb.S_block_size
+                err = sb.UpdateBitmapBlock(path)
+                if err != nil {
+                    return err
                 }
+                // Ya enlazaste la nueva carpeta en el padre, ahora crea el inodo y bloque de la nueva carpeta (vacío)
+                goto CREATE_CHILD
             }
         }
+        // Si no hay espacio para un nuevo bloque, error
+        return fmt.Errorf("no hay espacio en el inodo padre para enlazar la carpeta")
+    } else {
+        // 4. Si hay espacio, enlaza la nueva carpeta en el bloque existente
+        block := &FolderBlock{}
+        err := block.Deserialize(path, int64(sb.S_block_start+(parentBlockIndex*sb.S_block_size)))
+        if err != nil {
+            return err
+        }
+        copy(block.B_content[parentBlockSlot].B_name[:], destDir)
+        block.B_content[parentBlockSlot].B_inodo = sb.S_inodes_count // El inodo que se va a crear
+        err = block.Serialize(path, int64(sb.S_block_start+(parentBlockIndex*sb.S_block_size)))
+        if err != nil {
+            return err
+        }
+        err = inode.Serialize(path, int64(sb.S_inode_start+(inodeIndex*sb.S_inode_size)))
+        if err != nil {
+            return err
+        }
     }
+
+CREATE_CHILD:
+    // 5. Crear el inodo y bloque de la nueva carpeta
+    newBlockIndex := sb.S_blocks_count
+    newBlock := &FolderBlock{
+        B_content: [4]FolderContent{
+            {B_name: [12]byte{'.'}, B_inodo: sb.S_inodes_count},
+            {B_name: [12]byte{'.', '.'}, B_inodo: inodeIndex},
+            {B_name: [12]byte{'-'}, B_inodo: -1},
+            {B_name: [12]byte{'-'}, B_inodo: -1},
+        },
+    }
+    err = newBlock.Serialize(path, int64(sb.S_first_blo))
+    if err != nil {
+        return err
+    }
+    err = sb.UpdateBitmapBlock(path)
+    if err != nil {
+        return err
+    }
+    sb.S_blocks_count++
+    sb.S_free_blocks_count--
+    sb.S_first_blo += sb.S_block_size
+
+    newInode := &Inode{
+        I_uid:   1,
+        I_gid:   1,
+        I_size:  0,
+        I_atime: float32(time.Now().Unix()),
+        I_ctime: float32(time.Now().Unix()),
+        I_mtime: float32(time.Now().Unix()),
+        I_block: [15]int32{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+        I_type:  [1]byte{'0'},
+        I_perm:  [3]byte{'6', '6', '4'},
+    }
+    newInode.I_block[0] = newBlockIndex
+
+    err = newInode.Serialize(path, int64(sb.S_first_ino))
+    if err != nil {
+        return err
+    }
+    err = sb.UpdateBitmapInode(path)
+    if err != nil {
+        return err
+    }
+    sb.S_inodes_count++
+    sb.S_free_inodes_count--
+    sb.S_first_ino += sb.S_inode_size
+
     return nil
 }
-
 // createFolderinode crea una carpeta en un inodo específico
 func (sb *SuperBlock) createFileInInode(path string, inodeIndex int32, parentsDir []string, destFile string, fileSize int, fileContent []string) error {
 	// Crear un nuevo inodo
