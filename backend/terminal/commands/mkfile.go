@@ -160,17 +160,27 @@ func createFile(filePath string, size int, content string, sb *structures.SuperB
     fmt.Println("\nDirectorios padres:", parentDirs)
     fmt.Println("Directorio destino:", destDir)
 
+    // Validar existencia de la carpeta padre usando el sistema de archivos real
+    parentPath := "/" + strings.Join(parentDirs, "/")
+    parentPath = strings.ReplaceAll(parentPath, "//", "/")
+    exists, err := sb.FolderExists(partitionPath, parentPath)
+    if err != nil || !exists {
+        return fmt.Errorf("carpeta destino no encontrada: directorio destino '%s' no encontrado", parentPath)
+    }
+
     // Si es recursivo, crear las carpetas padres si no existen
     if recursive {
         for i := range parentDirs {
             subParents := parentDirs[:i]
             current := parentDirs[i]
-            exists, _ := sb.FolderExists(partitionPath, strings.Join(append(subParents, current), "/"))
+            subPath := "/" + strings.Join(append(subParents, current), "/")
+            subPath = strings.ReplaceAll(subPath, "//", "/")
+            exists, _ := sb.FolderExists(partitionPath, subPath)
             if !exists {
-                fmt.Printf("Creando carpeta padre: %s\n", current)
+                fmt.Printf("Creando carpeta padre: %s\n", subPath)
                 err := sb.CreateFolder(partitionPath, subParents, current)
                 if err != nil {
-                    return fmt.Errorf("error al crear la carpeta padre '%s': %w", current, err)
+                    return fmt.Errorf("error al crear la carpeta padre '%s': %w", subPath, err)
                 }
             }
         }
@@ -190,15 +200,16 @@ func createFile(filePath string, size int, content string, sb *structures.SuperB
         }
     }
 
+    // Dividir el contenido en chunks de 64 caracteres
     var chunks []string
     if content != "" {
-        chunks = []string{content}
+        chunks = utils.SplitStringIntoChunks(content)
     } else {
         chunks = utils.SplitStringIntoChunks(generateContent(size))
     }
     fmt.Println("\nChunks del contenido:", chunks)
 
-    err := sb.CreateFile(partitionPath, parentDirs, destDir, size, chunks)
+    err = sb.CreateFile(partitionPath, parentDirs, destDir, size, chunks)
     if err != nil {
         return fmt.Errorf("error al crear el archivo: %w", err)
     }
@@ -210,7 +221,16 @@ func createFile(filePath string, size int, content string, sb *structures.SuperB
     if err != nil {
         return fmt.Errorf("error al serializar el superbloque: %w", err)
     }
-	global.ValidFilePaths_mkfile = append(global.ValidFilePaths_mkfile, filePath)
+
+    // Guardar el path absoluto y normalizado
+    normalizedPath := filePath
+    if !strings.HasPrefix(normalizedPath, "/") {
+        normalizedPath = "/" + normalizedPath
+    }
+    normalizedPath = strings.ReplaceAll(normalizedPath, "//", "/")
+    if !contains_m(global.ValidFilePaths_mkfile, normalizedPath) {
+        global.ValidFilePaths_mkfile = append(global.ValidFilePaths_mkfile, normalizedPath)
+    }
 
     return nil
 }

@@ -1,7 +1,7 @@
 {
   "name": "Disco1.mia",
-  "size": 52428800,
-  "signature": 1905763165,
+  "size": 62914560,
+  "signature": 1345350239,
   "fit": "F",
   "partitions": [
     {
@@ -9,39 +9,19 @@
       "type": "P",
       "fit": "B",
       "start": 153,
-      "size": 10485760,
-      "name": "Part11\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "size": 20971520,
+      "name": "Part1\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
       "correlative": 1,
       "id": "131A"
     },
     {
-      "status": "1",
-      "type": "P",
-      "fit": "B",
-      "start": 10485913,
-      "size": 10240,
-      "name": "Part12\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-      "correlative": 2,
-      "id": "132A"
-    },
-    {
       "status": "0",
       "type": "P",
       "fit": "B",
-      "start": 10496153,
-      "size": 10485760,
-      "name": "Part13\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-      "correlative": -1,
-      "id": "N\u0000\u0000\u0000"
-    },
-    {
-      "status": "0",
-      "type": "P",
-      "fit": "B",
-      "start": 20981913,
-      "size": 10485760,
-      "name": "Part14\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-      "correlative": -1,
+      "start": 20971673,
+      "size": 9973760,
+      "name": "Part2\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "correlative": 0,
       "id": "N\u0000\u0000\u0000"
     }
   ]

@@ -120,13 +120,18 @@ func main() {
 
 		// Obtener el id de la partición montada activa
 		partitionID, err := stores.GetActivePartitionID()
+		fmt.Println("ID de la partición activa:", partitionID)
 		if err == nil {
-			// Obtener superbloque, partición montada y path real
+			fmt.Println("Obtuve partitionID:", partitionID)
 			sb, _, partitionPath, err := stores.GetMountedPartitionSuperblock(partitionID)
 			if err == nil {
-				// Extraer los archivos .txt y su contenido
+				fmt.Println("Obtuve superbloque y path:", partitionPath)
 				sb.ExtractTxtFiles(partitionPath, partitionID)
+			} else {
+				fmt.Println("Error al obtener superbloque:", err)
 			}
+		} else {
+			fmt.Println("Error al obtener partitionID:", err)
 		}
 
 		fmt.Println("aqui se termina la extraccion")

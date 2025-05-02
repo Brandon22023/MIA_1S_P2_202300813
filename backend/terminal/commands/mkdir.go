@@ -1,34 +1,29 @@
 package commands
 
 import (
-	"errors"
-	"fmt"
-	"os"
-	"regexp"
-	"strings"
-	"terminal/global"
-	stores "terminal/stores"
-	structures "terminal/structures"
-	utils "terminal/utils"
+    "errors"
+    "fmt"
+    "os"
+    "regexp"
+    "strings"
+    "terminal/global"
+    stores "terminal/stores"
+    structures "terminal/structures"
+    utils "terminal/utils"
 )
 
 // MKDIR estructura que representa el comando mkdir con sus parámetros
 type MKDIR struct {
-	path string // Path del directorio
-	p    bool   // Opción -p (crea directorios padres si no existen)
+    path string // Path del directorio
+    p    bool   // Opción -p (crea directorios padres si no existen)
 }
-
-/*
-   mkdir -p -path=/home/user/docs/usac
-   mkdir -path="/home/mis documentos/archivos clases"
-*/
 
 func ParseMkdir(tokens []string) (string, error) {
     cmd := &MKDIR{} // Crea una nueva instancia de MKDIR
 
     // Unir tokens en una sola cadena y luego dividir por espacios, respetando las comillas
     args := strings.Join(tokens, " ")
-    re := regexp.MustCompile(`-path=[^\s]+|-p`)
+    re := regexp.MustCompile(`-path=("[^"]+"|[^\s]+)|-p`)
     matches := re.FindAllString(args, -1)
 
     if len(matches) != len(tokens) {
@@ -53,35 +48,6 @@ func ParseMkdir(tokens []string) (string, error) {
                 value = strings.Trim(value, "\"")
             }
             cmd.path = value
-
-            // Validar y agregar el path
-            if cmd.path != "" {
-                segments := strings.Split(cmd.path, "/")
-                currentPath := ""
-                valid := true
-
-                if len(segments) == 2 && segments[1] != "" {
-                    global.ValidPaths = append(global.ValidPaths, cmd.path)
-                    break
-                }
-
-                for _, segment := range segments {
-                    if segment == "" {
-                        continue
-                    }
-                    currentPath += "/" + segment
-                    if !contains_m(global.ValidPaths, currentPath) {
-                        valid = false
-                        break
-                    }
-                }
-
-                if valid || cmd.p {
-                    global.ValidPaths = append(global.ValidPaths, cmd.path)
-                } else {
-                    return "", fmt.Errorf("el path '%s' no es válido porque faltan directorios intermedios", cmd.path)
-                }
-            }
         case "-p":
             cmd.p = true
         default:
@@ -111,8 +77,6 @@ func contains_m(paths []string, path string) bool {
     return false
 }
 
-// Aquí debería de estar logeado un usuario, por lo cual el usuario debería tener consigo el id de la partición
-
 func commandMkdir(mkdir *MKDIR) error {
     // Obtener el ID de la partición activa
     partitionID, err := stores.GetActivePartitionID()
@@ -136,7 +100,7 @@ func commandMkdir(mkdir *MKDIR) error {
     }
 
     // Validar permisos de escritura en la carpeta padre
-    parentDirs, destDir := utils.GetParentDirectories(mkdir.path)
+    parentDirs, _ := utils.GetParentDirectories(mkdir.path)
     currentParents := []string{}
     for _, parent := range parentDirs {
         currentParents = append(currentParents, parent)
@@ -155,19 +119,7 @@ func commandMkdir(mkdir *MKDIR) error {
         }
     }
 
-	// Crear la carpeta dentro de la partición
-    err = partitionSuperblock.CreateFolder(partitionPath, parentDirs, destDir)
-    if err != nil {
-        return fmt.Errorf("error al crear la carpeta '%s': %w", mkdir.path, err)
-    }
-
-    // Serializar el superbloque para guardar los cambios
-    err = partitionSuperblock.Serialize(partitionPath, int64(mountedPartition.Part_start))
-    if err != nil {
-        return fmt.Errorf("error al serializar el superbloque: %w", err)
-    }
-
-    // Crear el directorio
+    // Crear el directorio (y padres si aplica)
     err = createDirectory(mkdir.path, partitionSuperblock, partitionPath, mountedPartition, mkdir.p)
     if err != nil {
         return fmt.Errorf("error al crear el directorio: %w", err)
@@ -199,45 +151,50 @@ func createDirectory(dirPath string, sb *structures.SuperBlock, partitionPath st
     }
 
     // Validar si las carpetas padres existen y crearlas correctamente
+    currentPath := ""
     for i, parent := range parentDirs {
-        exists, err := sb.FolderExists(partitionPath, strings.Join(parentDirs[:i+1], "/"))
-        fmt.Printf("Verificando existencia de la carpeta: %s\n", parent)
+        if i == 0 && parent == "" {
+            continue
+        }
+        if currentPath == "" {
+            currentPath = parent
+        } else {
+            currentPath = currentPath + "/" + parent
+        }
+        exists, err := sb.FolderExists(partitionPath, currentPath)
+        fmt.Printf("Verificando existencia de la carpeta: %s\n", currentPath)
         if err != nil {
-            return fmt.Errorf("error al verificar la existencia de la carpeta '%s': %w", parent, err)
+            return fmt.Errorf("error al verificar la existencia de la carpeta '%s': %w", currentPath, err)
         }
         if !exists {
             if !allowParents {
                 return fmt.Errorf("error: no existen las carpetas padres para el directorio '%s'", dirPath)
             }
             // Crear las carpetas padres si la opción -p está habilitada
-            fmt.Printf("Creando carpeta padre: %s\n", parent)
+            fmt.Printf("Creando carpeta padre: %s\n", currentPath)
             err = sb.CreateFolder(partitionPath, parentDirs[:i], parent)
             if err != nil {
-                return fmt.Errorf("error al crear la carpeta padre '%s': %w", parent, err)
+                return fmt.Errorf("error al crear la carpeta padre '%s': %w", currentPath, err)
             }
-            // Elimina o comenta la creación física:
-            // physicalPath := filepath.Join(physicalBasePath, filepath.Join(parentDirs[:i+1]...))
-            // err = os.MkdirAll(physicalPath, 0755)
-            // if err != nil {
-            //     return fmt.Errorf("error al crear físicamente la carpeta '%s': %w", physicalPath, err)
-            // }
-            // fmt.Printf("Carpeta creada físicamente: %s\n", physicalPath)
+            // Guardar el path creado
+            if !contains_m(global.ValidPaths, currentPath) {
+                global.ValidPaths = append(global.ValidPaths, currentPath)
+            }
         }
     }
-
-    // Elimina o comenta la creación física del directorio destino:
-    // fullPath := filepath.Join(physicalBasePath, filepath.Join(filepath.Join(parentDirs...), destDir))
-    // fullPath = filepath.Clean(fullPath)
-    // err := os.MkdirAll(fullPath, 0755)
-    // if err != nil {
-    //     return fmt.Errorf("error al crear físicamente el directorio '%s': %w", fullPath, err)
-    // }
-    // fmt.Printf("Directorio creado físicamente: %s\n", fullPath)
 
     // Crear el directorio según el path proporcionado
     err := sb.CreateFolder(partitionPath, parentDirs, destDir)
     if err != nil {
         return fmt.Errorf("error al crear el directorio: %w", err)
+    }
+    normalizedPath := dirPath
+    if !strings.HasPrefix(normalizedPath, "/") {
+        normalizedPath = "/" + normalizedPath
+    }
+    normalizedPath = strings.ReplaceAll(normalizedPath, "//", "/")
+    if !contains_m(global.ValidPaths, normalizedPath) {
+        global.ValidPaths = append(global.ValidPaths, normalizedPath)
     }
 
     // Imprimir inodos y bloques

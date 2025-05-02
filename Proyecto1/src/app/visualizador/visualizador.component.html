@@ -83,7 +83,7 @@
             </div>
             <div class="info-item">
               <span>🆔</span>
-              <p>ID: <strong>{{ partition.id }}</strong></p>
+              <p>ID: <strong>{{ partition.state === 'Montada' ? partition.id : 'No está montada' }}</strong></p>
             </div>
           </div>
         </div>

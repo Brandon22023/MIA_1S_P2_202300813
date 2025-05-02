@@ -515,85 +515,96 @@ func (sb *SuperBlock) createFileInInode(path string, inodeIndex int32, parentsDi
 	}
 	return nil
 }
-
 func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
-    TxtFilesExtracted = []TxtFile{} // Limpiar antes de extraer
-    visitados := make(map[int32]bool)
-    var recorrer func(inodeIndex int32, rutaActual []string) error
-    recorrer = func(inodeIndex int32, rutaActual []string) error {
-        if visitados[inodeIndex] {
-            return nil
-        }
-        visitados[inodeIndex] = true
-
+    fmt.Println("========== INICIO ExtractTxtFiles ==========")
+    TxtFilesExtracted = []TxtFile{}
+    for inodeIndex := int32(0); inodeIndex < sb.S_inodes_count; inodeIndex++ {
+        fmt.Printf("\n[Depuración] Analizando inodo %d\n", inodeIndex)
         inode := &Inode{}
         err := inode.Deserialize(path, int64(sb.S_inode_start+(inodeIndex*sb.S_inode_size)))
         if err != nil {
-            fmt.Printf("Error deserializando inodo %d: %v\n", inodeIndex, err)
-            return err
+            fmt.Printf("[Depuración] Error deserializando inodo %d: %v\n", inodeIndex, err)
+            continue
         }
-        if inode.I_type[0] == '0' { // Carpeta
-            for _, blockIndex := range inode.I_block {
-                if blockIndex == -1 {
-                    continue
-                }
+        fmt.Printf("[Depuración] Inodo %d tipo: %c\n", inodeIndex, inode.I_type[0])
+        if inode.I_type[0] == '1' {
+            foundName := ""
+            foundPath := ""
+            // Buscar el nombre en todos los bloques de carpeta
+            for blockIdx := int32(0); blockIdx < sb.S_blocks_count; blockIdx++ {
                 folderBlock := &FolderBlock{}
-                err := folderBlock.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+                err := folderBlock.Deserialize(path, int64(sb.S_block_start+(blockIdx*sb.S_block_size)))
                 if err != nil {
+                    fmt.Printf("[Depuración] Error deserializando bloque %d: %v\n", blockIdx, err)
                     continue
                 }
-                for _, content := range folderBlock.B_content {
+                for i, content := range folderBlock.B_content {
                     name := strings.TrimSpace(strings.Trim(string(content.B_name[:]), "\x00 "))
-                    if name == "" || name == "." || name == ".." || content.B_inodo == -1 {
-                        continue
-                    }
-                    nuevaRuta := append(rutaActual, name)
-                    hijoInode := &Inode{}
-                    _ = hijoInode.Deserialize(path, int64(sb.S_inode_start+(content.B_inodo*sb.S_inode_size)))
-                    if hijoInode.I_type[0] == '1' && strings.HasSuffix(name, ".txt") {
-                        // Buscar el path válido en la lista
-                        pathFinal := "/" + strings.Join(nuevaRuta, "/") // Por defecto, la ruta reconstruida
+                    fmt.Printf("[Depuración] Bloque %d, Content %d: name='%s', inodo=%d\n", blockIdx, i, name, content.B_inodo)
+                    if content.B_inodo == inodeIndex && name != "" && name != "." && name != ".." {
+                        foundName = name
+                        // Buscar path válido por coincidencia de las primeras 5 letras
+                        foundPath = ""
                         for _, validPath := range global.ValidFilePaths_mkfile {
-                            segments := strings.Split(validPath, "/")
-                            if len(segments) > 0 && segments[len(segments)-1] == name {
-                                pathFinal = validPath
+                            validName := validPath
+                            if idx := strings.LastIndex(validPath, "/"); idx != -1 {
+                                validName = validPath[idx+1:]
+                            }
+                            fmt.Printf("[Depuración] Comparando '%s' con '%s'\n", validName, name)
+                            if len(validName) >= 5 && len(name) >= 5 && validName[:5] == name[:5] {
+                                foundPath = validPath
+                                fmt.Printf("[Depuración] Coincidencia de primeras 5 letras: '%s' ~ '%s'\n", validName, name)
                                 break
                             }
                         }
-                        var contenido string
-                        for _, blockIndex := range hijoInode.I_block {
-                            if blockIndex == -1 {
-                                break
-                            }
-                            block := &FileBlock{}
-                            err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
-                            if err != nil {
-                                continue
-                            }
-                            contenido += strings.TrimRight(string(block.B_content[:]), "\x00")
+                        if foundPath == "" {
+                            foundPath = "/" + name // fallback
+                            fmt.Printf("[Depuración] No se encontró path válido, usando fallback: %s\n", foundPath)
                         }
-                        txtFile := TxtFile{
-                            Path:      pathFinal,
-                            ID:        partitionID,
-                            Contenido: contenido,
-                            Size:      hijoInode.I_size,
-                        }
-                        TxtFilesExtracted = append(TxtFilesExtracted, txtFile)
-                        fmt.Printf("Archivo encontrado: %s\nRuta: %s\nTamaño: %d bytes\nContenido:\n%s\n\n",
-                            name, pathFinal, hijoInode.I_size, contenido)
-                        continue
-                    } else if hijoInode.I_type[0] == '0' {
-                        recorrer(content.B_inodo, nuevaRuta)
+                        fmt.Printf("[Depuración] Inodo %d: nombre encontrado '%s', path '%s'\n", inodeIndex, name, foundPath)
+                        break
                     }
+                }
+                if foundName != "" {
+                    break
                 }
             }
+            // Si encontró coincidencia, extraer
+            if foundName != "" && foundPath != "" && strings.HasSuffix(foundPath, ".txt") {
+                fmt.Printf("[Depuración] Extrayendo archivo .txt: %s (inodo %d)\n", foundName, inodeIndex)
+                var contenido string
+                for i, blockIndex := range inode.I_block {
+                    if blockIndex == -1 {
+                        fmt.Printf("[Depuración] Inodo %d: I_block[%d] = -1 (fin de bloques)\n", inodeIndex, i)
+                        break
+                    }
+                    block := &FileBlock{}
+                    err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+                    if err != nil {
+                        fmt.Printf("[Depuración] Error deserializando bloque de archivo %d: %v\n", blockIndex, err)
+                        continue
+                    }
+                    bloqueContenido := strings.TrimRight(string(block.B_content[:]), "\x00")
+                    fmt.Printf("[Depuración] Bloque de archivo %d: contenido='%s'\n", blockIndex, bloqueContenido)
+                    contenido += bloqueContenido
+                }
+                txtFile := TxtFile{
+                    Path:      foundPath,
+                    ID:        partitionID,
+                    Contenido: contenido,
+                    Size:      inode.I_size,
+                }
+                TxtFilesExtracted = append(TxtFilesExtracted, txtFile)
+                fmt.Printf("[Depuración] Archivo .txt extraído: %s | Path: %s | Size: %d\n", foundName, foundPath, inode.I_size)
+            } else if foundName != "" {
+                fmt.Printf("[Depuración] Archivo encontrado pero no es .txt: %s (inodo %d, path: %s)\n", foundName, inodeIndex, foundPath)
+            } else {
+                fmt.Printf("[Depuración] No se encontró nombre para inodo %d\n", inodeIndex)
+            }
         }
-        return nil
     }
-
-    err := recorrer(0, []string{}) // Iniciar desde la raíz con ruta vacía
-
-    return err
+    fmt.Println("========== FIN ExtractTxtFiles ==========")
+    return nil
 }
 
 func (sb *SuperBlock) GetTxtFiles(path string, partitionID string) ([]TxtFile, error) {

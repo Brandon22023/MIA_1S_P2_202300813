@@ -1,0 +1,76 @@
+#Cambiar "ubuntu" -> por el usuario de su distribución de linux
+#Cambiar “19” -> por los ultimos dos digitos de su carnet
+#Cambiar “RUTA_CONTENIDO” -> por la ruta del archivo que tenga su Nombre
+
+#******* CREACION DE DISCO *******
+# 60M A
+Mkdisk -size=60 -unit=M -fit=FF -path=/home/ubuntu/Calificacion_MIA/Discos/Disco1.mia
+
+#******* CREACION DE PARTICIONES *******
+#DISCO 1
+# 20M
+fdisk -type=P -unit=b -name=Part1 -size=20971520 -path=/home/ubuntu/Calificacion_MIA/Discos/Disco1.mia -fit=BF
+# 10M
+fdisk -type=P -unit=k -name=Part2 -size=10240 -path=/home/ubuntu/Calificacion_MIA/Discos/Disco1.mia -fit=BF
+# 10M
+fdisk -type=P -unit=M -name=Part3 -size=10 -path=/home/ubuntu/Calificacion_MIA/Discos/Disco1.mia -fit=BF
+
+#ELIMINANDO PARTICIONES
+fdisk -delete=fast -name=Part3 -path=/home/ubuntu/Calificacion_MIA/Discos/Disco1.mia
+
+#QUITNADO ESPACIO
+fdisk -add=-500 -size=10240 -unit=k -path=/home/ubuntu/Calificacion_MIA/Discos/Disco1.mia -name=Part2
+ 
+#******* MONTAR PARTICIONES *******
+#DISCO 1
+#191a -> 19 sus ultimos dos digitos
+mount -path=/home/ubuntu/Calificacion_MIA/Discos/Disco1.mia -name=Part1
+#192a -> 19 sus ultimos dos digitos
+mount -path=/home/ubuntu/Calificacion_MIA/Discos/Disco1.mia -name=Part2
+
+#******* DESMONTAR PARTICION *******
+unmount -id=192a 
+
+#******* CREACION DE SISTEMA DE ARCHIVOS *******
+mkfs -type=full -id=191a -fs=3fs
+
+#******* LOGIN *******
+login -user=root -pass=123 -id=191a
+
+#******* CREACION DE CARPETAS *******
+
+mkdir -path=/calificacion/TEST
+mkfile -path=/calificacion/TEST/nombre.txt -size=768
+mkfile -path=/calificacion/TEST/borrar.txt -size=768
+mkdir -path=/calificacion/TEST/BORRAME
+mkfile -path=/calificacion/TEST/cambiar_nombre.txt -size=768
+mkdir -path=/calificacion/COPY_TEST
+mkfile -path=/calificacion/COPY_TEST/moveme.txt -size=768
+
+mkdir -path=/calificacion/MOVE
+
+#******* REMOVE *******
+# Borrando archivo
+remove -path=/calificacion/TEST/borrar.txt
+
+#******* EDIT *******
+edit -path=/calificacion/TEST/nombre.txt -contenido=”RUTA_CONTENIDO”
+
+#******* RENAME *******
+rename -path=/calificacion/TEST/cambiar_nombre.txt -name=cambiado.txt
+
+#******* COPY *******
+copy -path=/calificacion/TEST -destino=/calificacion/COPY_TEST 
+
+#******* MOVE *******
+move -path=/calificacion/COPY_TEST/moveme.txt -destino=/calificacion/MOVE
+
+#******* CHOWN *******
+# Error no existe usuario
+chown -path=/calificacion -usuario=user_no_existe
+
+#******* CHMOD *******
+chmod -path=/calificacion/TEST -ugo=777
+
+#******* LOGOUT *******
+logout
