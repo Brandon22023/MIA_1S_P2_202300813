@@ -516,17 +516,17 @@ func (sb *SuperBlock) createFileInInode(path string, inodeIndex int32, parentsDi
 	return nil
 }
 func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
-    fmt.Println("========== INICIO ExtractTxtFiles ==========")
+    //fmt.Println("========== INICIO ExtractTxtFiles ==========")
     TxtFilesExtracted = []TxtFile{}
     for inodeIndex := int32(0); inodeIndex < sb.S_inodes_count; inodeIndex++ {
-        fmt.Printf("\n[Depuración] Analizando inodo %d\n", inodeIndex)
+        //fmt.Printf("\n[Depuración] Analizando inodo %d\n", inodeIndex)
         inode := &Inode{}
         err := inode.Deserialize(path, int64(sb.S_inode_start+(inodeIndex*sb.S_inode_size)))
         if err != nil {
-            fmt.Printf("[Depuración] Error deserializando inodo %d: %v\n", inodeIndex, err)
+            //fmt.Printf("[Depuración] Error deserializando inodo %d: %v\n", inodeIndex, err)
             continue
         }
-        fmt.Printf("[Depuración] Inodo %d tipo: %c\n", inodeIndex, inode.I_type[0])
+        //fmt.Printf("[Depuración] Inodo %d tipo: %c\n", inodeIndex, inode.I_type[0])
         if inode.I_type[0] == '1' {
             foundName := ""
             foundPath := ""
@@ -535,12 +535,12 @@ func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
                 folderBlock := &FolderBlock{}
                 err := folderBlock.Deserialize(path, int64(sb.S_block_start+(blockIdx*sb.S_block_size)))
                 if err != nil {
-                    fmt.Printf("[Depuración] Error deserializando bloque %d: %v\n", blockIdx, err)
+                    //fmt.Printf("[Depuración] Error deserializando bloque %d: %v\n", blockIdx, err)
                     continue
                 }
-                for i, content := range folderBlock.B_content {
+                for _, content := range folderBlock.B_content {
                     name := strings.TrimSpace(strings.Trim(string(content.B_name[:]), "\x00 "))
-                    fmt.Printf("[Depuración] Bloque %d, Content %d: name='%s', inodo=%d\n", blockIdx, i, name, content.B_inodo)
+                    //fmt.Printf("[Depuración] Bloque %d, Content %d: name='%s', inodo=%d\n", blockIdx, i, name, content.B_inodo)
                     if content.B_inodo == inodeIndex && name != "" && name != "." && name != ".." {
                         foundName = name
                         // Buscar path válido por coincidencia de las primeras 5 letras
@@ -550,18 +550,18 @@ func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
                             if idx := strings.LastIndex(validPath, "/"); idx != -1 {
                                 validName = validPath[idx+1:]
                             }
-                            fmt.Printf("[Depuración] Comparando '%s' con '%s'\n", validName, name)
+                            //fmt.Printf("[Depuración] Comparando '%s' con '%s'\n", validName, name)
                             if len(validName) >= 5 && len(name) >= 5 && validName[:5] == name[:5] {
                                 foundPath = validPath
-                                fmt.Printf("[Depuración] Coincidencia de primeras 5 letras: '%s' ~ '%s'\n", validName, name)
+                              //  fmt.Printf("[Depuración] Coincidencia de primeras 5 letras: '%s' ~ '%s'\n", validName, name)
                                 break
                             }
                         }
                         if foundPath == "" {
                             foundPath = "/" + name // fallback
-                            fmt.Printf("[Depuración] No se encontró path válido, usando fallback: %s\n", foundPath)
+                            //fmt.Printf("[Depuración] No se encontró path válido, usando fallback: %s\n", foundPath)
                         }
-                        fmt.Printf("[Depuración] Inodo %d: nombre encontrado '%s', path '%s'\n", inodeIndex, name, foundPath)
+                        //fmt.Printf("[Depuración] Inodo %d: nombre encontrado '%s', path '%s'\n", inodeIndex, name, foundPath)
                         break
                     }
                 }
@@ -571,21 +571,21 @@ func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
             }
             // Si encontró coincidencia, extraer
             if foundName != "" && foundPath != "" && strings.HasSuffix(foundPath, ".txt") {
-                fmt.Printf("[Depuración] Extrayendo archivo .txt: %s (inodo %d)\n", foundName, inodeIndex)
+                //fmt.Printf("[Depuración] Extrayendo archivo .txt: %s (inodo %d)\n", foundName, inodeIndex)
                 var contenido string
-                for i, blockIndex := range inode.I_block {
+                for _, blockIndex := range inode.I_block {
                     if blockIndex == -1 {
-                        fmt.Printf("[Depuración] Inodo %d: I_block[%d] = -1 (fin de bloques)\n", inodeIndex, i)
+                        //fmt.Printf("[Depuración] Inodo %d: I_block[%d] = -1 (fin de bloques)\n", inodeIndex, i)
                         break
                     }
                     block := &FileBlock{}
                     err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
                     if err != nil {
-                        fmt.Printf("[Depuración] Error deserializando bloque de archivo %d: %v\n", blockIndex, err)
+                        //fmt.Printf("[Depuración] Error deserializando bloque de archivo %d: %v\n", blockIndex, err)
                         continue
                     }
                     bloqueContenido := strings.TrimRight(string(block.B_content[:]), "\x00")
-                    fmt.Printf("[Depuración] Bloque de archivo %d: contenido='%s'\n", blockIndex, bloqueContenido)
+                    //fmt.Printf("[Depuración] Bloque de archivo %d: contenido='%s'\n", blockIndex, bloqueContenido)
                     contenido += bloqueContenido
                 }
                 txtFile := TxtFile{
@@ -595,15 +595,15 @@ func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
                     Size:      inode.I_size,
                 }
                 TxtFilesExtracted = append(TxtFilesExtracted, txtFile)
-                fmt.Printf("[Depuración] Archivo .txt extraído: %s | Path: %s | Size: %d\n", foundName, foundPath, inode.I_size)
+                //fmt.Printf("[Depuración] Archivo .txt extraído: %s | Path: %s | Size: %d\n", foundName, foundPath, inode.I_size)
             } else if foundName != "" {
-                fmt.Printf("[Depuración] Archivo encontrado pero no es .txt: %s (inodo %d, path: %s)\n", foundName, inodeIndex, foundPath)
+               // fmt.Printf("[Depuración] Archivo encontrado pero no es .txt: %s (inodo %d, path: %s)\n", foundName, inodeIndex, foundPath)
             } else {
-                fmt.Printf("[Depuración] No se encontró nombre para inodo %d\n", inodeIndex)
+              //  fmt.Printf("[Depuración] No se encontró nombre para inodo %d\n", inodeIndex)
             }
         }
     }
-    fmt.Println("========== FIN ExtractTxtFiles ==========")
+    //fmt.Println("========== FIN ExtractTxtFiles ==========")
     return nil
 }
 
@@ -637,6 +637,15 @@ func (sb *SuperBlock) FindInodeByPath(diskPath string, absPath string) (int32, e
             }
             for _, content := range folderBlock.B_content {
                 name := strings.Trim(string(content.B_name[:]), "\x00 ")
+                // Cambia esta línea:
+                // if name == part && content.B_inodo != -1 {
+                // Por esta:
+                if len(part) > 12 {
+                    part = part[:12]
+                }
+                if len(name) > 12 {
+                    name = name[:12]
+                }
                 if name == part && content.B_inodo != -1 {
                     inodeIndex = content.B_inodo
                     found = true
