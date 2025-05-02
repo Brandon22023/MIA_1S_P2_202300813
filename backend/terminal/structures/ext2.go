@@ -6,6 +6,7 @@ import (
 	"terminal/utils"
 	"time"
     "terminal/global"
+
 )
 var TxtFilesExtracted []TxtFile
 type TxtFile struct {
@@ -545,7 +546,8 @@ func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
                         foundName = name
                         // Buscar path válido por coincidencia de las primeras 5 letras
                         foundPath = ""
-                        for _, validPath := range global.ValidFilePaths_mkfile {
+                        validPaths := global.GetValidFilePathsMkfile()
+                        for _, validPath := range validPaths {
                             validName := validPath
                             if idx := strings.LastIndex(validPath, "/"); idx != -1 {
                                 validName = validPath[idx+1:]
@@ -661,4 +663,34 @@ func (sb *SuperBlock) FindInodeByPath(diskPath string, absPath string) (int32, e
         }
     }
     return inodeIndex, nil
+}
+
+// Eliminar un archivo .txt de la lista
+func RemoveTxtFileFromExtracted(path string) {
+    newList := []TxtFile{}
+    for _, file := range TxtFilesExtracted {
+        if file.Path != path {
+            newList = append(newList, file)
+        }
+    }
+    TxtFilesExtracted = newList
+}
+
+// Renombrar un archivo .txt en la lista
+// Renombrar un archivo .txt en la lista usando solo el nombre del archivo
+func RenameTxtFileInExtractedByName(oldName, newName string) {
+    for i, file := range TxtFilesExtracted {
+        // Extrae el nombre del archivo del path
+        parts := strings.Split(file.Path, "/")
+        if len(parts) == 0 {
+            continue
+        }
+        currentName := parts[len(parts)-1]
+        if currentName == oldName {
+            // Cambia solo el nombre, conserva el path
+            parts[len(parts)-1] = newName
+            TxtFilesExtracted[i].Path = strings.Join(parts, "/")
+            break // Si solo quieres cambiar el primero que coincida
+        }
+    }
 }

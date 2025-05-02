@@ -67,7 +67,7 @@ func GetMountedPartitionRep(id string) (*structures.MBR, *structures.SuperBlock,
 	// Obtener el path de la partición montada
     path, exists := MountedPartitions[id]
     if !exists {
-        return nil, nil, "", fmt.Errorf("error: la partición con ID '%s' no está montada. Verifique que el ID sea correcto.", id)
+        return nil, nil, "", fmt.Errorf("error: la partición con ID '%s' no está montada. Verifique que el ID sea correcto", id)
     }
 
 	// Crear una instancia de MBR

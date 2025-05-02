@@ -11,8 +11,6 @@ import (
 	"terminal/global"
 	stores "terminal/stores"
 
-	//structures "terminal/structures"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
@@ -127,6 +125,8 @@ func main() {
 			if err == nil {
 				fmt.Println("Obtuve superbloque y path:", partitionPath)
 				sb.ExtractTxtFiles(partitionPath, partitionID)
+				// <-- Reconstruir la lista global
+
 			} else {
 				fmt.Println("Error al obtener superbloque:", err)
 			}
@@ -135,9 +135,9 @@ func main() {
 		}
 
 		fmt.Println("aqui se termina la extraccion")
-
+        
 		fmt.Println("Paths válidos de mkfile guardados:")
-		for _, path := range global.ValidFilePaths_mkfile {
+		for _, path := range global.GetValidFilePathsMkfile() {
 			fmt.Println(path)
 		}
 		

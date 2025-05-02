@@ -5,7 +5,7 @@ import (
     "strings"
     global "terminal/global"
     "terminal/structures"
-	 stores "terminal/stores"
+    stores "terminal/stores"
 )
 
 func ParseRemove(args []string) (string, error) {
@@ -37,15 +37,37 @@ func ParseRemove(args []string) (string, error) {
 
     parts := strings.Split(strings.Trim(normalizedPath, "/"), "/")
     for i := 0; i < len(parts); i++ {
-		tryPath := "/" + strings.Join(parts[i:], "/")
-		err = RemoveFile(sb, partitionPath, tryPath)
-		if err == nil {
-			// Extraer el nombre del archivo del tryPath
-			pathParts := strings.Split(tryPath, "/")
-			fileName := pathParts[len(pathParts)-1]
-			return fmt.Sprintf("REMOVE: Archivo eliminado: %s", fileName), nil
-		}
-	}
+        tryPath := "/" + strings.Join(parts[i:], "/")
+        err = RemoveFile(sb, partitionPath, tryPath)
+        if err == nil {
+            // Imprimir lista antes de eliminar
+            // Imprimir lista antes de eliminar
+            fmt.Println("Lista antes del remove:", global.GetValidFilePathsMkfile())
+
+            // Eliminar el path de la lista global usando get y set (comparando solo el nombre del archivo)
+            fmt.Println("Eliminando archivo de la lista global:", tryPath)
+            paths := global.GetValidFilePathsMkfile()
+            newPaths := []string{}
+            for _, p := range paths {
+                pathParts := strings.Split(p, "/")
+                if len(pathParts) == 0 || pathParts[len(pathParts)-1] != parts[len(parts)-1] {
+                    newPaths = append(newPaths, p)
+                }
+            }
+            global.SetValidFilePathsMkfile(newPaths)
+
+            // Imprimir lista después de eliminar
+            fmt.Println("Lista después del remove:", global.GetValidFilePathsMkfile())
+
+            // También puedes actualizar la lista de archivos extraídos si lo necesitas
+            structures.RemoveTxtFileFromExtracted(tryPath)
+
+            // Extraer el nombre del archivo del tryPath
+            pathParts := strings.Split(tryPath, "/")
+            fileName := pathParts[len(pathParts)-1]
+            return fmt.Sprintf("REMOVE: Archivo eliminado: %s", fileName), nil
+        }
+    }
     return "", fmt.Errorf("no se encontró el archivo en ninguna ruta posible a partir de: %s", path)
 }
 
@@ -142,17 +164,14 @@ func RemoveFile(sb *structures.SuperBlock, partitionPath string, filePath string
         // Aquí podrías limpiar el inodo si lo deseas
     }
 
-    // 4. Eliminar el path de la lista global
-    for i, p := range global.ValidFilePaths_mkfile {
-        fmt.Printf("[Depuración] Comparando path global: '%s' con '%s'\n", p, normalizedPath)
-        if p == normalizedPath {
-            fmt.Printf("[Depuración] Eliminando path de la lista global\n")
-            global.ValidFilePaths_mkfile = append(global.ValidFilePaths_mkfile[:i], global.ValidFilePaths_mkfile[i+1:]...)
-            break
-        }
-    }
 
     fmt.Printf("Archivo eliminado correctamente: %s\n", normalizedPath)
     fmt.Println("========== FIN RemoveFile ==========")
+
+	// Imprimir inodos y bloques para validar el cambio
+	fmt.Println("\n--- INODOS DESPUÉS DEL REMOVE ---")
+	sb.PrintInodes(partitionPath)
+	fmt.Println("\n--- BLOQUES DESPUÉS DEL REMOVE ---")
+	sb.PrintBlocks(partitionPath)
     return nil
 }
