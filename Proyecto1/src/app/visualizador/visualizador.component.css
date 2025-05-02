@@ -622,3 +622,59 @@
   justify-content: center;
   z-index: 1000;
 }
+
+/* ...existing code... */
+.file-info {
+  position: absolute;
+  bottom: -150%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  background: rgba(0, 0, 128, 0.7);
+  color: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 10;
+  width: 250px;
+  text-align: left;
+}
+
+.file-item:hover .file-info {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -10px);
+}
+
+.file-info h5 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #00ffff;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.file-info .info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.file-info .info-item span {
+  font-size: 15px;
+  margin-right: 10px;
+  color: #ffcc00;
+}
+
+.file-info .info-item p {
+  font-size: 14px;
+  margin: 0;
+  color: #fff;
+}
+
+.file-info .info-item p strong {
+  color: #00ffff;
+}
+/* ...existing code... */

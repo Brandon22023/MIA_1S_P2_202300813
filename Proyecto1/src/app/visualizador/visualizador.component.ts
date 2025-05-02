@@ -29,7 +29,7 @@ export class VisualizadorComponent {
   selectedFileContent: string | null = null; // Contenido del archivo seleccionado
   constructor(private analyzerService: AnalyzerService) {}
   selectedpartId: string | null = null;
-  
+  selectedFile: { path: string; contenido: string } | null = null;
   ngOnInit(): void {
     this.loadDisks();
     this.loadFolders(); // Cargar carpetas desde el backend
@@ -201,9 +201,12 @@ createFoldersFromPath(path: string, id: string): void {
   selectFile(file: { path: string; contenido: string }): void {
     this.selectedFileContent = file.contenido;
     this.showNotaModal = true;
+    this.selectedFile = file;
   }
   closeNotaModal(): void {
     this.showNotaModal = false;
+    this.selectedFile = null;
+    this.selectedFileContent = null;
   }
 
   createFileFromPath(path: string, id: string, contenido: string, size: number): void {

@@ -134,6 +134,24 @@
         >
           <span>📄</span>
           <p>{{ file.path.split('/').pop() }}</p>
+          <div class="file-info">
+            <h5>💡 Información del Archivo</h5>
+            <div class="info-item">
+              <span>📄</span>
+              <p>Nombre: <strong>{{ file.path.split('/').pop() }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>🆔</span>
+              <p>ID: <strong>{{ file.id }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>🔒</span>
+              <p>Permisos: <strong>{{ file.permissions }}</strong></p>
+            </div>
+            <div class="info-item">
+              <span>📏</span>
+              <p>Tamaño: <strong>{{ file.size }} bytes</strong></p>
+            </div>
         </div>
       </div>
 
@@ -145,7 +163,7 @@
   <div class="modal-nota" *ngIf="showNotaModal" (click)="closeNotaModal()">
     <div class="modal-content-nota" (click)="$event.stopPropagation()">
       <div class="notepad-title-bar">
-        <span class="notepad-title">Block de notas - {{ selectedFileContent ? 'user.txt' : '' }}</span>
+        <span class="notepad-title">Block de notas - {{ selectedFile ? (selectedFile.path.split('/').pop() || '') : '' }}</span>
         <button class="notepad-close" (click)="closeNotaModal()">✖</button>
       </div>
       <div class="notepad-toolbar">
