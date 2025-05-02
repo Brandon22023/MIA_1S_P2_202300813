@@ -3,10 +3,11 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
-	"os"
+	"terminal/global"
 	stores "terminal/stores"
 	structures "terminal/structures"
 	utils "terminal/utils"
@@ -209,6 +210,7 @@ func createFile(filePath string, size int, content string, sb *structures.SuperB
     if err != nil {
         return fmt.Errorf("error al serializar el superbloque: %w", err)
     }
+	global.ValidFilePaths_mkfile = append(global.ValidFilePaths_mkfile, filePath)
 
     return nil
 }

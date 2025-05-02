@@ -1,14 +1,15 @@
 package commands
 
 import (
+	"errors"
+	"fmt"
+	"os"
+	"regexp"
+	"strings"
+	"terminal/global"
 	stores "terminal/stores"
 	structures "terminal/structures"
 	utils "terminal/utils"
-	"errors"
-	"fmt"
-	"regexp"
-	"strings"
-	"os"
 )
 
 // MKDIR estructura que representa el comando mkdir con sus parámetros
@@ -60,7 +61,7 @@ func ParseMkdir(tokens []string) (string, error) {
                 valid := true
 
                 if len(segments) == 2 && segments[1] != "" {
-                    stores.ValidPaths = append(stores.ValidPaths, cmd.path)
+                    global.ValidPaths = append(global.ValidPaths, cmd.path)
                     break
                 }
 
@@ -69,14 +70,14 @@ func ParseMkdir(tokens []string) (string, error) {
                         continue
                     }
                     currentPath += "/" + segment
-                    if !contains_m(stores.ValidPaths, currentPath) {
+                    if !contains_m(global.ValidPaths, currentPath) {
                         valid = false
                         break
                     }
                 }
 
                 if valid || cmd.p {
-                    stores.ValidPaths = append(stores.ValidPaths, cmd.path)
+                    global.ValidPaths = append(global.ValidPaths, cmd.path)
                 } else {
                     return "", fmt.Errorf("el path '%s' no es válido porque faltan directorios intermedios", cmd.path)
                 }

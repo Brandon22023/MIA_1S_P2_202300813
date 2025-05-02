@@ -377,7 +377,6 @@ func inodeIndexFromInode(sb *SuperBlock, path string, inode *Inode) int32 {
     }
     return 0
 }
-// CreateFile crea un archivo en el sistema de archivos
 func (sb *SuperBlock) CreateFile(path string, parentsDir []string, destFile string, size int, cont []string) error {
     // 1. Buscar el inodo de la carpeta destino
     var parentInodeIndex int32 = 0 // raíz
@@ -447,6 +446,64 @@ func (sb *SuperBlock) CreateFile(path string, parentsDir []string, destFile stri
             }
         }
     }
+
+    // Si no hay espacio en los bloques actuales, crear un nuevo bloque de carpeta
+    for i := 0; i < len(parentInode.I_block); i++ {
+        if parentInode.I_block[i] == -1 {
+            // Crear nuevo bloque de carpeta
+            newBlockIndex := sb.S_blocks_count
+            newBlock := &FolderBlock{}
+            // Inicializa los slots
+            copy(newBlock.B_content[0].B_name[:], ".")
+            newBlock.B_content[0].B_inodo = parentInodeIndex
+            copy(newBlock.B_content[1].B_name[:], "..")
+            newBlock.B_content[1].B_inodo = 0 // O el inodo padre real si lo tienes
+            copy(newBlock.B_content[2].B_name[:], destFile)
+            newBlock.B_content[2].B_inodo = sb.S_inodes_count // El nuevo inodo del archivo
+            newBlock.B_content[3].B_inodo = -1
+            // Serializar el nuevo bloque
+            newBlock.Serialize(path, int64(sb.S_block_start+(newBlockIndex*sb.S_block_size)))
+            parentInode.I_block[i] = newBlockIndex
+            parentInode.Serialize(path, int64(sb.S_inode_start+(parentInodeIndex*sb.S_inode_size)))
+            sb.S_blocks_count++
+            sb.S_free_blocks_count--
+            sb.S_first_blo += sb.S_block_size
+            sb.UpdateBitmapBlock(path)
+
+            // Crear el inodo y bloques del archivo
+            
+            fileInode := &Inode{
+                I_uid:   1,
+                I_gid:   1,
+                I_size:  int32(size),
+                I_atime: float32(time.Now().Unix()),
+                I_ctime: float32(time.Now().Unix()),
+                I_mtime: float32(time.Now().Unix()),
+                I_block: [15]int32{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+                I_type:  [1]byte{'1'},
+                I_perm:  [3]byte{'6', '6', '4'},
+            }
+            for i, chunk := range cont {
+                blockIdx := sb.S_blocks_count
+                fileBlock := &FileBlock{}
+                copy(fileBlock.B_content[:], chunk)
+                fileBlock.Serialize(path, int64(sb.S_first_blo))
+                fileInode.I_block[i] = blockIdx
+                sb.S_blocks_count++
+                sb.S_free_blocks_count--
+                sb.S_first_blo += sb.S_block_size
+                sb.UpdateBitmapBlock(path)
+            }
+            fileInode.Serialize(path, int64(sb.S_first_ino))
+            sb.UpdateBitmapInode(path)
+            sb.S_inodes_count++
+            sb.S_free_inodes_count--
+            sb.S_first_ino += sb.S_inode_size
+
+            return nil
+        }
+    }
+
     return fmt.Errorf("no hay espacio en la carpeta destino")
 }
 

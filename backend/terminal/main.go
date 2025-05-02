@@ -8,8 +8,8 @@ import (
 	"strings"
 	analyzer "terminal/analyzer"
 	commands "terminal/commands"
+	"terminal/global"
 	stores "terminal/stores"
-
 
 	//structures "terminal/structures"
 
@@ -125,11 +125,16 @@ func main() {
 			sb, _, partitionPath, err := stores.GetMountedPartitionSuperblock(partitionID)
 			if err == nil {
 				// Extraer los archivos .txt y su contenido
-				sb.ExtractTxtFiles(partitionPath)
+				sb.ExtractTxtFiles(partitionPath, partitionID)
 			}
 		}
 
 		fmt.Println("aqui se termina la extraccion")
+
+		fmt.Println("Paths válidos de mkfile guardados:")
+		for _, path := range global.ValidFilePaths_mkfile {
+			fmt.Println(path)
+		}
 		
 
 		return c.JSON(CommandResponse{
@@ -379,19 +384,19 @@ func main() {
 	// Estructura global para almacenar paths válidos y el ID activo
 
 	app.Get("/folders", func(c *fiber.Ctx) error {
-		if stores.ActivePartitionID == "" {
+		if global.ActivePartitionID == "" {
 			return c.Status(400).JSON(fiber.Map{
 				"error": "No hay una partición activa",
 			})
 		}
 	
 		var response []map[string]string
-		for _, path := range stores.ValidPaths {
+		for _, path := range global.ValidPaths {
 			// Validar que el path no esté vacío y no contenga segmentos vacíos
 			if strings.TrimSpace(path) != "" && !strings.Contains(path, "//") {
 				response = append(response, map[string]string{
 					"path": path,
-					"id":   stores.ActivePartitionID,
+					"id":   global.ActivePartitionID,
 				})
 			}
 		}
@@ -405,24 +410,27 @@ func main() {
 	})
 
 	app.Get("/txtfiles", func(c *fiber.Ctx) error {
-		if stores.ActivePartitionID == "" {
+		if global.ActivePartitionID == "" {
 			return c.Status(400).JSON(fiber.Map{
 				"error": "No hay una partición activa",
 			})
 		}
-		partitionID := stores.ActivePartitionID
+		partitionID := global.ActivePartitionID
 		sb, _, partitionPath, err := stores.GetMountedPartitionSuperblock(partitionID)
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{
 				"error": "No se pudo obtener el superbloque",
 			})
 		}
+		fmt.Println("Paths válidos de mkfile guardados:", global.ValidFilePaths_mkfile)
 		txtFiles, err := sb.GetTxtFiles(partitionPath, partitionID)
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{
 				"error": "No se pudieron extraer los archivos .txt",
 			})
 		}
+		// Imprimir lo que se está enviando al frontend
+		fmt.Println("Archivos .txt enviados al frontend:", txtFiles)
 		return c.JSON(fiber.Map{
 			"txtfiles": txtFiles,
 		})

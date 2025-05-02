@@ -1,11 +1,12 @@
 package commands
 
 import (
-	stores "terminal/stores"
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
+	"terminal/global"
+	stores "terminal/stores"
 )
 
 // LOGIN estructura que representa el comando login con sus parámetros
@@ -158,8 +159,8 @@ func CommandLogin(login *LOGIN) error {
     }
 
     // Establecer el ID activo globalmente
-    stores.ActivePartitionID = login.ID
-    fmt.Printf("ID de la partición activa: %s\n", stores.ActivePartitionID)
+    global.ActivePartitionID = login.ID
+    fmt.Printf("ID de la partición activa: %s\n", global.ActivePartitionID)
     // Si la validación es exitosa, iniciar sesión
     stores.Auth.Login(login.User, login.Pass, login.ID)
 

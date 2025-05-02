@@ -21,7 +21,7 @@ export class VisualizadorComponent {
     id: string; 
   }[] = []; // Lista de particiones
   carpetas: { path: string; id: string; permissions: string; }[] = [];
-  txt: { path: string; id: string; permissions: string; contenido: string }[] = [];
+  txt: { path: string; id: string; permissions: string; contenido: string; size: number }[] = [];
   currentPath: string = ''; // Ruta actual
   ruta: string[] = []; // Ruta desglosada para mostrar en la barra
   selectedDisk: string | null = null;
@@ -29,6 +29,7 @@ export class VisualizadorComponent {
   selectedFileContent: string | null = null; // Contenido del archivo seleccionado
   constructor(private analyzerService: AnalyzerService) {}
   selectedpartId: string | null = null;
+  
   ngOnInit(): void {
     this.loadDisks();
     this.loadFolders(); // Cargar carpetas desde el backend
@@ -50,19 +51,21 @@ export class VisualizadorComponent {
     });
   }
   loadTxtFiles(): void {
-    this.analyzerService.getTxtFiles().subscribe({
-      next: (response) => {
-        // Agrega la propiedad permissions con valor por defecto
-        this.txt = response.map(file => ({
-          ...file,
-          permissions: '664'
-        }));
-      },
-      error: (err) => {
-        console.error('Error al cargar los archivos txt:', err);
-      }
-    });
-  }
+  this.analyzerService.getTxtFiles().subscribe({
+    next: (response) => {
+      console.log('Respuesta real del backend txtfiles:', response);
+      this.txt = response.map(file => ({
+        ...file,
+        permissions: '664',
+        size: file.size ?? 0
+      }));
+      console.log('Archivos txt cargados en this.txt:', this.txt);
+    },
+    error: (err) => {
+      console.log('Error al cargar archivos txt:', err);
+    }
+  });
+}
   
   createFoldersFromPath(path: string, id: string): void {
     const parts = path.split('/');
@@ -191,7 +194,7 @@ export class VisualizadorComponent {
     this.showNotaModal = false;
   }
 
-  createFileFromPath(path: string, id: string, contenido: string): void {
+  createFileFromPath(path: string, id: string, contenido: string, size: number): void {
     // Buscar si ya existe el archivo con ese path e id
     const existingFile = this.txt.find(file => file.path === path && file.id === id);
     if (existingFile) {
@@ -217,26 +220,37 @@ export class VisualizadorComponent {
         id,
         permissions: '664',
         contenido,
+        size,
       });
       console.log(`Archivo creado: ${fileName} en ${currentPath || 'raíz'}`);
     } else {
       console.error('El nombre del archivo no es válido.');
     }
   }
-  get filteredTxt(): { path: string; id: string; permissions: string; contenido: string }[] {
-    const prefix = this.currentPath ? this.currentPath + '/' : '';
-    const depth = this.currentPath ? this.currentPath.split('/').length : 0;
-    const result = this.txt.filter((file) => {
-      if (file.id !== this.selectedpartId) return false; // <--- Cambia aquí
-      const fileParts = file.path.split('/');
-      if (this.currentPath) {
-        return file.path.startsWith(prefix) && fileParts.length === depth + 1;
-      } else {
-        return fileParts.length === 2 && fileParts[0] === '';
+
+  get filteredTxt(): { path: string; id: string; permissions: string; contenido: string; size: number }[] {
+    // Normaliza la ruta actual quitando la barra inicial y final
+    const normalizedCurrentPath = this.currentPath.replace(/^\/|\/$/g, '');
+    const prefix = normalizedCurrentPath ? normalizedCurrentPath + '/' : '';
+    const depth = normalizedCurrentPath
+      ? normalizedCurrentPath.split('/').length + 1
+      : 1;
+    return this.txt.filter((file) => {
+      if (file.id !== this.selectedpartId) return false;
+      // Normaliza el path del archivo quitando la barra inicial
+      const normalizedFilePath = file.path.replace(/^\//, '');
+      const fileParts = normalizedFilePath.split('/');
+      if (!normalizedCurrentPath) {
+        // Raíz: solo archivos con un segmento
+        return fileParts.length === 1;
       }
+      // Subcarpeta: debe empezar con el prefijo y tener la profundidad correcta
+      return normalizedFilePath.startsWith(prefix) && fileParts.length === depth;
     });
-    console.log('Archivos visibles en este nivel:', result);
-    return result;
   }
+
+  
+      
+
   
 }

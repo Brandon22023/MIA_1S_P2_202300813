@@ -1,17 +1,20 @@
 package structures
 
 import (
-	"terminal/utils"
+	"fmt"
 	"strings"
+	"terminal/utils"
 	"time"
-    "fmt"
+    "terminal/global"
 )
+var TxtFilesExtracted []TxtFile
 type TxtFile struct {
     Path      string `json:"path"`
     ID        string `json:"id"`
     Contenido string `json:"contenido"`
 	Size      int32  `json:"size"`
 }
+
 // Crear users.txt en nuestro sistema de archivos
 func (sb *SuperBlock) CreateUsersFileExt2(path string) error {
 	// ----------- Creamos / -----------
@@ -513,94 +516,120 @@ func (sb *SuperBlock) createFileInInode(path string, inodeIndex int32, parentsDi
 	return nil
 }
 
-// Extrae archivos .txt y su contenido del sistema de archivos ext2, mostrando la ruta completa
-func (sb *SuperBlock) ExtractTxtFiles(path string) error {
-    for i := int32(0); i < sb.S_inodes_count; i++ {
+func (sb *SuperBlock) ExtractTxtFiles(path string, partitionID string) error {
+    TxtFilesExtracted = []TxtFile{} // Limpiar antes de extraer
+    visitados := make(map[int32]bool)
+    var recorrer func(inodeIndex int32, rutaActual []string) error
+    recorrer = func(inodeIndex int32, rutaActual []string) error {
+        if visitados[inodeIndex] {
+            return nil
+        }
+        visitados[inodeIndex] = true
+
         inode := &Inode{}
-        err := inode.Deserialize(path, int64(sb.S_inode_start+(i*sb.S_inode_size)))
+        err := inode.Deserialize(path, int64(sb.S_inode_start+(inodeIndex*sb.S_inode_size)))
         if err != nil {
+            fmt.Printf("Error deserializando inodo %d: %v\n", inodeIndex, err)
             return err
         }
-        // Solo archivos
-        if inode.I_type[0] == '1' {
+        if inode.I_type[0] == '0' { // Carpeta
             for _, blockIndex := range inode.I_block {
                 if blockIndex == -1 {
-                    break
+                    continue
                 }
-                block := &FileBlock{}
-                err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+                folderBlock := &FolderBlock{}
+                err := folderBlock.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
                 if err != nil {
-                    return err
+                    continue
                 }
-                // Buscar el nombre y la ruta en los bloques de carpeta
-                fileName := ""
-                filePath := ""
-                for j := int32(0); j < sb.S_inodes_count; j++ {
-                    parentInode := &Inode{}
-                    _ = parentInode.Deserialize(path, int64(sb.S_inode_start+(j*sb.S_inode_size)))
-                    if parentInode.I_type[0] == '0' {
-                        for _, parentBlockIndex := range parentInode.I_block {
-                            if parentBlockIndex == -1 {
+                for _, content := range folderBlock.B_content {
+                    name := strings.TrimSpace(strings.Trim(string(content.B_name[:]), "\x00 "))
+                    if name == "" || name == "." || name == ".." || content.B_inodo == -1 {
+                        continue
+                    }
+                    nuevaRuta := append(rutaActual, name)
+                    hijoInode := &Inode{}
+                    _ = hijoInode.Deserialize(path, int64(sb.S_inode_start+(content.B_inodo*sb.S_inode_size)))
+                    if hijoInode.I_type[0] == '1' && strings.HasSuffix(name, ".txt") {
+                        // Buscar el path válido en la lista
+                        pathFinal := "/" + strings.Join(nuevaRuta, "/") // Por defecto, la ruta reconstruida
+                        for _, validPath := range global.ValidFilePaths_mkfile {
+                            segments := strings.Split(validPath, "/")
+                            if len(segments) > 0 && segments[len(segments)-1] == name {
+                                pathFinal = validPath
                                 break
                             }
-                            parentBlock := &FolderBlock{}
-                            _ = parentBlock.Deserialize(path, int64(sb.S_block_start+(parentBlockIndex*sb.S_block_size)))
-                            for _, content := range parentBlock.B_content {
-                                if content.B_inodo == i {
-                                    name := strings.TrimRight(string(content.B_name[:]), "\x00")
-                                    if strings.HasSuffix(name, ".txt") {
-                                        fileName = name
-                                        // Reconstruir la ruta desde la raíz
-                                        filePath = reconstructPath(sb, path, j, name)
-                                    }
-                                }
-                            }
                         }
+                        var contenido string
+                        for _, blockIndex := range hijoInode.I_block {
+                            if blockIndex == -1 {
+                                break
+                            }
+                            block := &FileBlock{}
+                            err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+                            if err != nil {
+                                continue
+                            }
+                            contenido += strings.TrimRight(string(block.B_content[:]), "\x00")
+                        }
+                        txtFile := TxtFile{
+                            Path:      pathFinal,
+                            ID:        partitionID,
+                            Contenido: contenido,
+                            Size:      hijoInode.I_size,
+                        }
+                        TxtFilesExtracted = append(TxtFilesExtracted, txtFile)
+                        fmt.Printf("Archivo encontrado: %s\nRuta: %s\nTamaño: %d bytes\nContenido:\n%s\n\n",
+                            name, pathFinal, hijoInode.I_size, contenido)
+                        continue
+                    } else if hijoInode.I_type[0] == '0' {
+                        recorrer(content.B_inodo, nuevaRuta)
                     }
                 }
-                if fileName != "" {
-					content := strings.TrimRight(string(block.B_content[:]), "\x00")
-					fmt.Printf(
-						"Archivo encontrado: %s\nRuta: %s\nTamaño: %d bytes\nContenido:\n%s\n\n",
-						fileName, filePath, inode.I_size, content,
-					)
-				}
             }
         }
+        return nil
     }
-    return nil
+
+    err := recorrer(0, []string{}) // Iniciar desde la raíz con ruta vacía
+
+    return err
 }
 
-// Función auxiliar para reconstruir la ruta completa de un archivo dado el inodo padre y el nombre
-func reconstructPath(sb *SuperBlock, path string, parentInodeIndex int32, fileName string) string {
-    var dirs []string
-    currentInodeIndex := parentInodeIndex
+func (sb *SuperBlock) GetTxtFiles(path string, partitionID string) ([]TxtFile, error) {
+    // Solo retorna la lista global ya extraída
+    return TxtFilesExtracted, nil
+}
 
-    // Recorrer hacia atrás hasta el inodo raíz (0)
-    for currentInodeIndex != 0 {
+// Busca el índice de inodo dado un path absoluto
+func (sb *SuperBlock) FindInodeByPath(diskPath string, absPath string) (int32, error) {
+    if absPath == "" || absPath == "/" {
+        return 0, nil // raíz
+    }
+    parts := strings.Split(strings.Trim(absPath, "/"), "/")
+    inodeIndex := int32(0) // raíz
+    for _, part := range parts {
+        inode := &Inode{}
+        err := inode.Deserialize(diskPath, int64(sb.S_inode_start+(inodeIndex*sb.S_inode_size)))
+        if err != nil {
+            return -1, err
+        }
         found := false
-        for i := int32(0); i < sb.S_inodes_count; i++ {
-            inode := &Inode{}
-            _ = inode.Deserialize(path, int64(sb.S_inode_start+(i*sb.S_inode_size)))
-            if inode.I_type[0] == '0' {
-                for _, blockIndex := range inode.I_block {
-                    if blockIndex == -1 {
-                        break
-                    }
-                    block := &FolderBlock{}
-                    _ = block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
-                    for _, content := range block.B_content {
-                        if content.B_inodo == currentInodeIndex && string(content.B_name[:1]) != "." {
-                            dirName := strings.TrimRight(string(content.B_name[:]), "\x00")
-                            dirs = append([]string{dirName}, dirs...)
-                            currentInodeIndex = i
-                            found = true
-                            break
-                        }
-                    }
-                    if found {
-                        break
-                    }
+        for _, blockIndex := range inode.I_block {
+            if blockIndex == -1 {
+                continue
+            }
+            folderBlock := &FolderBlock{}
+            err := folderBlock.Deserialize(diskPath, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
+            if err != nil {
+                continue
+            }
+            for _, content := range folderBlock.B_content {
+                name := strings.Trim(string(content.B_name[:]), "\x00 ")
+                if name == part && content.B_inodo != -1 {
+                    inodeIndex = content.B_inodo
+                    found = true
+                    break
                 }
             }
             if found {
@@ -608,70 +637,8 @@ func reconstructPath(sb *SuperBlock, path string, parentInodeIndex int32, fileNa
             }
         }
         if !found {
-            break
+            return -1, fmt.Errorf("no se encontró el inodo para %s", absPath)
         }
     }
-    // Agregar la raíz
-    dirs = append([]string{""}, dirs...)
-    // Agregar el nombre del archivo
-    dirs = append(dirs, fileName)
-    return strings.Join(dirs, "/")
-}
-// Devuelve archivos .txt y su contenido del sistema de archivos ext2, mostrando la ruta completa
-func (sb *SuperBlock) GetTxtFiles(path string, partitionID string) ([]TxtFile, error) {
-    var files []TxtFile
-    for i := int32(0); i < sb.S_inodes_count; i++ {
-        inode := &Inode{}
-        err := inode.Deserialize(path, int64(sb.S_inode_start+(i*sb.S_inode_size)))
-        if err != nil {
-            continue
-        }
-        // Solo archivos
-        if inode.I_type[0] == '1' {
-            for _, blockIndex := range inode.I_block {
-                if blockIndex == -1 {
-                    break
-                }
-                block := &FileBlock{}
-                err := block.Deserialize(path, int64(sb.S_block_start+(blockIndex*sb.S_block_size)))
-                if err != nil {
-                    continue
-                }
-                fileName := ""
-                filePath := ""
-                for j := int32(0); j < sb.S_inodes_count; j++ {
-                    parentInode := &Inode{}
-                    _ = parentInode.Deserialize(path, int64(sb.S_inode_start+(j*sb.S_inode_size)))
-                    if parentInode.I_type[0] == '0' {
-                        for _, parentBlockIndex := range parentInode.I_block {
-                            if parentBlockIndex == -1 {
-                                break
-                            }
-                            parentBlock := &FolderBlock{}
-                            _ = parentBlock.Deserialize(path, int64(sb.S_block_start+(parentBlockIndex*sb.S_block_size)))
-                            for _, content := range parentBlock.B_content {
-                                if content.B_inodo == i {
-                                    name := strings.TrimRight(string(content.B_name[:]), "\x00")
-                                    if strings.HasSuffix(name, ".txt") {
-                                        fileName = name
-                                        filePath = reconstructPath(sb, path, j, name)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if fileName != "" {
-                    content := strings.TrimRight(string(block.B_content[:]), "\x00")
-                    files = append(files, TxtFile{
-                        Path:      filePath,
-                        ID:        partitionID,
-                        Contenido: content,
-						Size:      inode.I_size,
-                    })
-                }
-            }
-        }
-    }
-    return files, nil
+    return inodeIndex, nil
 }
