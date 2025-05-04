@@ -10,6 +10,7 @@ import (
 	commands "terminal/commands"
 	"terminal/global"
 	stores "terminal/stores"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -32,7 +33,15 @@ func main() {
 	
 	app := fiber.New()
 
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"status":  "ok",
+			"time":    time.Now(),
+		})
+	})
+
 	app.Use(cors.New(cors.Config{}))
+
 
 	app.Post("/analyze", func(c *fiber.Ctx) error {
 		var req CommandRequest

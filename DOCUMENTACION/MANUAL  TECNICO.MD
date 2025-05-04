@@ -5,39 +5,39 @@
 **TUTOR  ACADÉMICO:** KEVIN GARCÍA
 **Nombre:** Brandon Antonio Marroquín Pérez  
 **Carnet:** 202300813  
-**Fecha de Entrega:** 30 de marzo de 2025  
+**Fecha de Entrega:** 4 de mayo de 2025  
 **Curso:** lab MANEJO E IMPLEMENTACION DE ARCHIVOS
 **Semestre:** SEXTO SEMESTRE 
 
 ---
 ## Introducción  
-El proyecto consiste en desarrollar una aplicación web para la gestión de un sistema de archivos **EXT2**, simulando su comportamiento en un entorno distribuido. La solución integra un **frontend** moderno (con frameworks como Angular, React o Vue.js) y un **backend** en Go, que manejará las operaciones sobre archivos binarios (`.mia`) que emulan discos virtuales. El objetivo es permitir a los usuarios interactuar con el sistema de archivos mediante comandos, gestionar particiones, usuarios, permisos y generar reportes visuales con Graphviz.
+El proyecto consiste en desarrollar una aplicación web para la gestión y simulación de sistemas de archivos **EXT2** y **EXT3**, permitiendo experimentar tanto con la estructura clásica de EXT2 como con el soporte de journaling de EXT3. La solución integra un **frontend** moderno (Angular, React o Vue.js) y un **backend** en Go, que maneja operaciones sobre archivos binarios (`.mia`) que emulan discos virtuales. El objetivo es que los usuarios puedan interactuar con ambos sistemas de archivos mediante comandos, gestionar particiones, usuarios, permisos y generar reportes visuales con Graphviz, explorando así las diferencias y ventajas de cada sistema.
 
 ---
 
-## Objetivos  
-
 ### Objetivo General  
-Desarrollar una aplicación web que simule un sistema de archivos **EXT2**, permitiendo la gestión de discos virtuales, particiones, usuarios, permisos y operaciones básicas de archivos, con una arquitectura cliente-servidor y reportes gráficos.  
+Desarrollar una aplicación web que simule sistemas de archivos **EXT2** y **EXT3**, permitiendo la gestión de discos virtuales, particiones, usuarios, permisos y operaciones básicas de archivos, con una arquitectura cliente-servidor y reportes gráficos, mostrando las ventajas del journaling en EXT3.
 
 ### Objetivos Específicos  
-1. **Implementar estructuras de datos clave** (MBR, EBR, inodos, bloques) en archivos binarios (`.mia`) para emular el sistema de archivos EXT2, respetando sus limitaciones y comportamientos teóricos.  
+1. **Implementar estructuras de datos clave** (MBR, EBR, inodos, bloques, journal) en archivos binarios (`.mia`) para emular los sistemas de archivos EXT2 y EXT3, respetando sus limitaciones y comportamientos teóricos.  
 2. **Diseñar una interfaz web** que permita ejecutar comandos para administrar discos, particiones, usuarios y archivos, con áreas de entrada/salida y soporte para scripts (`.smia`).  
+3. **Comparar y demostrar** el funcionamiento y ventajas de EXT3 respecto a EXT2, especialmente en cuanto a integridad y recuperación ante fallos mediante journaling.
 
 ---
 
 ## Alcance del Sistema  
 - **Frontend**: Interfaz web con áreas para comandos y resultados, carga de scripts y visualización de salidas.  
-- **Backend**: APIs RESTful en Go para manejar operaciones sobre discos virtuales (creación, montaje, formateo) y estructuras EXT2 (inodos, bloques, bitmaps).  
+- **Backend**: APIs RESTful en Go para manejar operaciones sobre discos virtuales (creación, montaje, formateo) y estructuras EXT2/EXT3 (inodos, bloques, bitmaps, journal).  
 - **Funcionalidades clave**:  
-  - Comandos `MKDISK`, `FDISK`, `MOUNT`, `MKFS`, `LOGIN`, `MKFILE`, `MKDIR`.  
-  - Gestión de usuarios/grupos (`MKUSR`, `RMGRP`, etc.) y permisos.  
+  - Comandos `MKDISK`, `FDISK`, `MOUNT`, `MKFS`, `LOGIN`, `MKFILE`, `MKDIR`, `MKUSR`, `RMGRP`, `COPY`, `MOVE`, `REP`, `RMDISK`, `LOGOUT`, `UNMOUNT`.
+  - Comandos específicos de EXT3: `JOURNAL`, `RECOVERY`, `SHOWJOURNAL`.
+  - Gestión de usuarios/grupos y permisos.
   - Generación de reportes (`mbr`, `disk`, `tree`, etc.) con Graphviz.  
 - **Limitaciones**:  
-  - Solo soporta sistemas de archivos EXT2.  
+  - Solo soporta sistemas de archivos EXT2 y EXT3 simulados.  
   - No utiliza hardware físico (discos simulados en archivos binarios).  
 
----
+
 
 ## Consideraciones Técnicas  
 1. **Lenguajes/Frameworks**:  
@@ -52,6 +52,7 @@ Desarrollar una aplicación web que simule un sistema de archivos **EXT2**, perm
    - Generados con Graphviz para validar funcionalidades (ej: `rep -name=mbr`).  
 
 ---
+
 
 ## Requisitos Recomendados  
 - **Backend**:  
@@ -79,8 +80,28 @@ Desarrollar una aplicación web que simule un sistema de archivos **EXT2**, perm
 ---
 
 ## Conclusión  
-Este proyecto permite entender a profundidad el funcionamiento de **EXT2** mediante una implementación práctica, combinando conceptos de sistemas de archivos, gestión de memoria y desarrollo full-stack. La solución fomenta el uso de buenas prácticas (arquitectura limpia, documentación) y valida su correcto funcionamiento mediante reportes gráficos. Además, sienta las bases para extensiones futuras (ej: soporte para otros sistemas de archivos).  
+Este proyecto permite entender a profundidad el funcionamiento de los sistemas de archivos **EXT2** y **EXT3** mediante una implementación práctica, combinando conceptos de sistemas de archivos, gestión de memoria, journaling y desarrollo full-stack. La solución fomenta el uso de buenas prácticas (arquitectura limpia, documentación) y valida su correcto funcionamiento mediante reportes gráficos. Además, sienta las bases para extensiones futuras y permite comparar la robustez y ventajas de EXT3 frente a EXT2, especialmente en escenarios de recuperación ante fallos.
 
+
+| Comando      | Descripción                                                                                   | Parámetros principales                                                                                  | Soporte EXT2 | Soporte EXT3 |
+|--------------|----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|--------------|--------------|
+| MKDISK       | Crea un nuevo disco virtual.                                                                  | -size, -unit, -fit, -path                                                                              | ✔️           | ✔️           |
+| RMDISK       | Elimina un disco virtual.                                                                     | -path                                                                                                  | ✔️           | ✔️           |
+| FDISK        | Crea particiones en un disco.                                                                 | -size, -unit, -fit, -path, -type, -name                                                                | ✔️           | ✔️           |
+| MOUNT        | Monta una partición de un disco.                                                              | -path, -name                                                                                           | ✔️           | ✔️           |
+| UNMOUNT      | Desmonta una partición montada.                                                               | -id                                                                                                    | ✔️           | ✔️           |
+| MKFS         | Formatea una partición con EXT2 o EXT3.                                                       | -id, -type, -fs                                                                                        | ✔️           | ✔️           |
+| LOGIN        | Inicia sesión en una partición montada.                                                       | -user, -pass, -id                                                                                      | ✔️           | ✔️           |
+| LOGOUT       | Cierra la sesión actual.                                                                      | Ninguno                                                                                                | ✔️           | ✔️           |
+| MKDIR        | Crea directorios en una partición montada.                                                    | -path, -p                                                                                              | ✔️           | ✔️           |
+| MKFILE       | Crea archivos en una partición montada.                                                       | -path, -size, -cont                                                                                    | ✔️           | ✔️           |
+| COPY         | Copia archivos o carpetas dentro del sistema de archivos.                                     | -path, -destino                                                                                        | ✔️           | ✔️           |
+| MOVE         | Mueve archivos o carpetas dentro del sistema de archivos.                                     | -path, -destino                                                                                        | ✔️           | ✔️           |
+| REMOVE       | Elimina archivos del sistema de archivos.                                                     | -path                                                                                                  | ✔️           | ✔️           |
+| RENAME       | Cambia el nombre de un archivo o carpeta.                                                     | -path, -name                                                                                           | ✔️           | ✔️           |
+| FIND         | Busca archivos o carpetas por patrón en el sistema de archivos.                               | -path, -name                                                                                           | ✔️           | ✔️           |
+| REP          | Genera reportes del sistema de archivos (mbr, disk, inode, block, bm_inode, bm_block, sb, etc.)| -id, -path, -name, -path_file_ls                                                                       | ✔️           | ✔️           |
+| JOURNAL      | Muestra el contenido del journal (solo EXT3).                                                 | -id                                                                                                    | ❌           | ✔️           |
 
 # Logica del programa
 # Explicación Detallada de la Estructura y Conexión entre los Módulos Frontend y Backend
@@ -104,61 +125,78 @@ analyze(input: string): Observable<any> {
 
 # Backend
 
-El backend está construido con Go y el framework Fiber, que es ligero y optimizado para aplicaciones web.
+### 1. analyze
 
-## Explicación del código del backend
+El endpoint `/analyze` recibe comandos como texto, los separa por líneas y los procesa uno a uno usando el analizador principal. Entre los comandos soportados se encuentran los nuevos: `COPY`, `MOVE`, `REMOVE`, `RENAME`, `FIND`, además de los clásicos como `MKDISK`, `RMDISK`, `MOUNT`, etc.
 
-### Middleware CORS
-
-Se utiliza `cors` para permitir que las solicitudes del frontend (en el navegador) puedan comunicarse con el servidor. Sin esto, las solicitudes podrían ser bloqueadas debido a restricciones de seguridad.
-
-### Ruta `/analyze`
-
-El backend escucha las solicitudes `POST` en la ruta `/analyze`. Cuando se recibe una solicitud, se procesa el comando enviado en el cuerpo de la solicitud.
-
-### Procesamiento de comandos
-
-- Se usa `BodyParser` para leer el cuerpo de la solicitud, que se espera sea un JSON con la propiedad `command`.
-- El comando es procesado y se divide en varias líneas si contiene saltos de línea (`\n`).
-- Se llama a la función `analyzer.Analyzer(cmd)` para procesar cada comando. Si hay un error al procesar un comando, se agrega un mensaje de error al resultado.
-
-### Respuesta
-
-Al finalizar, el backend responde al frontend con un objeto JSON que contiene un atributo `output`, que es el resultado del procesamiento de los comandos.
-
+**Fragmento relevante:**
 ```go
 app.Post("/analyze", func(c *fiber.Ctx) error {
-  var req CommandRequest
-  if err := c.BodyParser(&req); err != nil {
-    return c.Status(400).JSON(CommandResponse{
-      Output: "Error: Petición inválida",
-    })
-  }
-
-  commands := strings.Split(req.Command, "\n")
-  output := ""
-  for _, cmd := range commands {
-    if strings.TrimSpace(cmd) == "" {
-      continue
+    ...
+    for _, cmd := range commandsList {
+        ...
+        result, err := analyzer.Analyzer(cmd)
+        ...
     }
-    result, err := analyzer.Analyzer(cmd)
-    if err != nil {
-      output += fmt.Sprintf("Error: %s\n", err.Error())
-    } else {
-      output += fmt.Sprintf("%s\n", result)
-    }
-  }
-
-  if output == "" {
-    output = "No se ejecutó ningún comando"
-  }
-
-  return c.JSON(CommandResponse{
-    Output: output,
-  })
+    ...
 })
 ```
-Este bloque de código en Markdown está formateado para resaltar la sintaxis de Go, lo que facilita su lectura y comprensión.
+**Descripción:**  
+Cada comando es analizado y ejecutado, permitiendo manipular archivos y carpetas (copiar, mover, eliminar, renombrar, buscar) recorriendo inodos y bloques para mantener la persistencia y consistencia en el archivo `.mia`.
+
+---
+
+### 2. Extracción y Exportación de Información
+
+Después de ejecutar comandos, el backend exporta información de los discos y extrae archivos `.txt` válidos de la partición activa, actualizando las listas globales.
+
+**Fragmento relevante:**
+```go
+// Exportar información de cada path
+for _, diskPath := range paths {
+    err := commands.ExportDiskInfo(diskPath)
+    ...
+}
+// Extraer archivos .txt válidos
+partitionID, err := stores.GetActivePartitionID()
+if err == nil {
+    sb, _, partitionPath, err := stores.GetMountedPartitionSuperblock(partitionID)
+    if err == nil {
+        sb.ExtractTxtFiles(partitionPath, partitionID)
+    }
+}
+```
+**Descripción:**  
+Esto permite que el frontend consulte información actualizada sobre discos, particiones, carpetas y archivos `.txt` tras cada operación.
+
+---
+
+### 3. Nuevos Endpoints para Carpetas y Archivos
+
+Se agregaron endpoints para consultar carpetas y archivos `.txt` válidos en la partición activa:
+
+- `/folders`: Devuelve las rutas de carpetas válidas.
+- `/txtfiles`: Devuelve los archivos `.txt` válidos.
+
+**Fragmento relevante:**
+```go
+app.Get("/folders", func(c *fiber.Ctx) error {
+    ...
+    for _, path := range global.ValidPaths {
+        ...
+    }
+    ...
+})
+
+app.Get("/txtfiles", func(c *fiber.Ctx) error {
+    ...
+    txtFiles, err := sb.GetTxtFiles(partitionPath, partitionID)
+    ...
+})
+```
+**Descripción:**  
+Estos endpoints permiten al frontend mostrar la estructura de carpetas y archivos disponibles para operaciones como copiar, mover, eliminar o buscar.
+
 
 
 ## Conexión entre el Frontend y el Backend
@@ -193,10 +231,80 @@ El backend procesa el comando, lo analiza y devuelve un resultado o mensaje de e
 **Frontend (Angular):**
 El frontend recibe la respuesta y la muestra al usuario, quien puede interactuar con el sistema.
 
+## Uso de AWS, Docker y Termius para Despliegue en la Nube
+
+Para facilitar el acceso, la disponibilidad y la portabilidad del sistema, se utilizarán servicios de Amazon Web Services (AWS) junto con herramientas modernas de despliegue y administración:
+
+- **Amazon EC2**: Se utilizará para alojar y ejecutar tanto el backend como el frontend de la aplicación, permitiendo que los usuarios accedan desde cualquier lugar.
+- **Amazon S3**: Se empleará para el almacenamiento de archivos y respaldos importantes, asegurando la persistencia y disponibilidad de los datos generados por el sistema.
+- **Docker**: El backend será empaquetado y desplegado usando Docker, lo que facilita la portabilidad, el despliegue y la gestión de dependencias, asegurando que el entorno de ejecución sea consistente en cualquier servidor.
+- **Termius**: Se utilizará Termius como cliente SSH para subir y administrar tanto el backend (contenedor Docker) como el frontend estático en la instancia EC2, permitiendo una gestión remota eficiente y segura.
+
+Esta integración permite escalar la solución, mejorar la seguridad, facilitar la administración de los recursos y garantizar que el sistema pueda ser desplegado y actualizado de manera sencilla y confiable en la nube.
+
 ## Simulación de Sistema de Archivos EXT2
 
 Aunque este código no implementa directamente un sistema de archivos, el backend (Go) podría estar procesando comandos relacionados con un sistema de archivos, como listar archivos, leer contenido, o manipular archivos. En el flujo de trabajo, el frontend (Angular) enviaría los comandos específicos del sistema de archivos (por ejemplo, `ls`, `cat`, `mkdir`, etc.) al backend para que los procese y devuelva el resultado.
 
+## EXT3
+
+El sistema de archivos **EXT3** es una extensión de EXT2 que añade soporte para journaling, lo que permite una mayor integridad y recuperación ante fallos. En este proyecto, la implementación de EXT3 se basa en las mismas estructuras fundamentales de EXT2 (MBR, EBR, inodos, bloques, superbloque), pero incorpora la estructura adicional de **Journal** para registrar operaciones críticas.
+
+### Características principales de EXT3 en la implementación
+
+- **Journaling**: Cada operación importante (como la creación de archivos o carpetas) se registra en una estructura de journal antes de aplicarse al sistema de archivos. Esto permite recuperar el sistema en caso de un fallo inesperado.
+- **Estructura Journal**: Se implementa la estructura `Journal`, que almacena información sobre la operación realizada, la ruta afectada, el contenido y la fecha/hora.
+- **Compatibilidad**: EXT3 mantiene compatibilidad con las estructuras de EXT2, permitiendo migrar o montar particiones EXT2 como EXT3.
+- **Persistencia**: El journal se almacena directamente en el archivo binario `.mia`, siguiendo la restricción de no usar estructuras en memoria para la gestión de archivos/carpetas.
+
+### Estructuras adicionales
+
+- **Journal**
+  - `J_count`: Número de operación registrada.
+  - `J_content`: Información de la operación (tipo, ruta, contenido, fecha).
+
+### Ejemplo de flujo de journaling
+
+1. El usuario ejecuta una operación (por ejemplo, crear una carpeta).
+2. Antes de modificar los inodos o bloques, se registra la operación en el journal.
+3. Si la operación se completa correctamente, el sistema continúa normalmente.
+4. En caso de fallo, el sistema puede consultar el journal para recuperar o revertir operaciones pendientes.
+
+### Funciones clave implementadas
+
+- `CreateUsersFileExt3`: Crea el archivo `users.txt` y registra la operación en el journal.
+- `createFolderInInodeExt3`: Crea carpetas y registra cada operación en el journal antes de modificar las estructuras principales.
+- Serialización y deserialización del journal para asegurar persistencia en disco.
+
+### Ventajas de EXT3 sobre EXT2
+
+- **Recuperación rápida**: Gracias al journaling, el sistema puede recuperarse rápidamente tras un fallo, sin necesidad de revisar todo el sistema de archivos.
+- **Integridad**: Menor riesgo de corrupción de datos ante apagados inesperados o errores del sistema.
+
+### Limitaciones
+
+- El journaling implementado es básico y está orientado a operaciones de creación de archivos y carpetas.
+- El rendimiento puede ser ligeramente inferior al de EXT2 debido al registro adicional de operaciones.
+
+### Ejemplo de estructura Journal en Go
+
+```go
+type Journal struct {
+    J_count   int32
+    J_content Information
+}
+
+type Information struct {
+    I_operation [10]byte
+    I_path      [32]byte
+    I_content   [64]byte
+    I_date      float32
+}
+```
+
+### Resumen
+
+La implementación de EXT3 en este proyecto permite simular un sistema de archivos robusto y tolerante a fallos, manteniendo la compatibilidad con EXT2 y cumpliendo con los principios de persistencia y seguridad exigidos por el curso.
 ## Explicación de las Estructuras de Datos
 
 ### MBR (Master Boot Record)
@@ -421,3 +529,103 @@ Elimina el archivo del disco especificado.
 Copiar
 Este formato Markdown es claro y estructurado, ideal para documentación técnica o para incluir en plataformas que soporten Markdown.
 
+
+## Comandos Nuevos: Resumen y Ejemplo de Código
+
+A continuación se describen los comandos nuevos implementados en el sistema, junto con un resumen funcional y un fragmento representativo de su código para entender su propósito y funcionamiento.
+
+---
+
+### COPY
+
+**Propósito:**  
+Copia archivos o carpetas (y su contenido) dentro del sistema de archivos, duplicando la estructura y los datos.
+
+**Fragmento de código:**
+```go
+// ParseCopy procesa el comando copy
+func ParseCopy(args []string) (string, error) {
+    ...
+    err = copyFolderRecursive(sb, partitionPath, srcPath, dstPath, true)
+    ...
+}
+```
+**Descripción:**  
+`ParseCopy` recibe los paths de origen y destino, y llama a `copyFolderRecursive`, que recorre inodos y bloques para copiar carpetas y archivos, asegurando que la estructura y los datos se dupliquen correctamente en el destino.
+
+---
+
+### MOVE
+
+**Propósito:**  
+Mueve archivos o carpetas a otra ubicación, eliminando el original y actualizando las rutas en las estructuras internas.
+
+**Fragmento de código:**
+```go
+// ParseMove procesa el comando move
+func ParseMove(args []string) (string, error) {
+    ...
+    // Actualizar la lista global: reemplazar srcPath por dstFilePath
+    ...
+}
+```
+**Descripción:**  
+`ParseMove` valida los paths, actualiza las rutas en la lista global y mueve el archivo/carpeta, asegurando que los datos y referencias se actualicen correctamente, eliminando el original tras la copia.
+
+---
+
+### REMOVE
+
+**Propósito:**  
+Elimina archivos del sistema de archivos, liberando los inodos y bloques asociados y actualizando las estructuras de carpetas.
+
+**Fragmento de código:**
+```go
+func ParseRemove(args []string) (string, error) {
+    ...
+    err = RemoveFile(sb, partitionPath, tryPath)
+    ...
+}
+```
+**Descripción:**  
+`ParseRemove` busca el archivo a eliminar recorriendo los inodos y bloques, y llama a `RemoveFile`, que elimina la referencia en la carpeta padre y libera los recursos asociados.
+
+---
+
+### RENAME
+
+**Propósito:**  
+Cambia el nombre de un archivo o carpeta, modificando la entrada correspondiente en el bloque de la carpeta padre.
+
+**Fragmento de código:**
+```go
+func ParseRename(args []string) (string, error) {
+    ...
+    err = RenameFile(sb, partitionPath, tryPath, newName)
+    ...
+}
+```
+**Descripción:**  
+`ParseRename` localiza el archivo/carpeta y llama a `RenameFile`, que actualiza el nombre en el bloque de la carpeta padre, permitiendo cambiar nombres sin alterar el contenido ni la ubicación.
+
+---
+
+### FIND
+
+**Propósito:**  
+Busca archivos o carpetas que coincidan con un patrón, mostrando la estructura encontrada en formato de árbol.
+
+**Fragmento de código:**
+```go
+func ParseFind(args []string) (string, error) {
+    ...
+    tree := buildTree(matches, path)
+    ...
+}
+```
+**Descripción:**  
+`ParseFind` filtra las rutas que coinciden con el patrón usando `matchPattern` y construye una representación tipo árbol con `buildTree`, facilitando la localización visual de archivos y carpetas.
+
+---
+
+> **Nota:** Todos estos comandos operan recorriendo inodos y bloques para manipular archivos y carpetas, asegurando la persistencia y consistencia en el archivo binario `.mia`.
